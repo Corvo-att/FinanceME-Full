@@ -1,4 +1,5 @@
 ﻿using FinanceME.Models;
+using FinanceME.Models.Entities;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
