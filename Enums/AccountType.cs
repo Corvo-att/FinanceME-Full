@@ -7,6 +7,7 @@ namespace FinanceME.Enums
         CreditCard,
         Investment,
         Loan,
-        Cash
+        Cash,
+        Other
     }
 }

@@ -4,7 +4,7 @@ using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinanceME.Models.Entities
 {
-    public class Budget
+    public class Bill
     {
         public int Id { get; set; }
 
@@ -13,32 +13,31 @@ namespace FinanceME.Models.Entities
         [ForeignKey(nameof(UserId))]
         public virtual User User { get; set; } = null!;
 
-        [Required]
-        public int CategoryId { get; set; }
+        public int? CategoryId { get; set; }
         [ForeignKey(nameof(CategoryId))]
-        public virtual Category Category { get; set; } = null!;
+        public virtual Category? Category { get; set; }
 
         [Required]
-        [MaxLength(150)]
+        [MaxLength(200)]
         public string Name { get; set; } = string.Empty;
 
         [Required]
         [Column(TypeName = "decimal(18,2)")]
-        public decimal LimitAmount { get; set; }
-
-        // Cached sum of transactions — updated on every transaction write to avoid slow dashboard queries
-        [Column(TypeName = "decimal(18,2)")]
-        public decimal SpentAmount { get; set; } = 0;
+        public decimal Amount { get; set; }
 
         [Required]
-        public BudgetPeriod Period { get; set; }
+        public BillFrequency Frequency { get; set; }
 
-        public DateTime StartDate { get; set; }
-        public DateTime EndDate { get; set; }
+        // Next upcoming due date — update this after each payment
+        [Required]
+        public DateTime DueDate { get; set; }
 
-        // Percentage (0-100) at which a "near limit" alert fires — default is 80%
-        [Column(TypeName = "decimal(5,2)")]
-        public decimal WarningThreshold { get; set; } = 80.00m;
+        public bool IsPaid { get; set; } = false;
+        public DateTime? LastPaidDate { get; set; }
+
+        public bool AutoPay { get; set; } = false;
+        public bool ReminderEnabled { get; set; } = true;
+        public int ReminderDaysBefore { get; set; } = 3;
 
         public bool IsActive { get; set; } = true;
 

@@ -7,7 +7,7 @@ namespace FinanceME.Enums
         BiWeekly,
         Monthly,
         Quarterly,
-        BiAnnually,
+        SemiAnnually,
         Annually
     }
 }
