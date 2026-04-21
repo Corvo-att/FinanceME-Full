@@ -1,0 +1,290 @@
+@{
+    ViewData["Title"] = "Accounts Overview";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/AccOver.css" asp-append-version="true" />
+    <script src="https://kit.fontawesome.com/b9a020078f.js" crossorigin="anonymous"></script>
+}
+
+<div class="page-banner accounts-page-banner">
+    <div class="page-banner-content">
+        <div class="text-label">ACCOUNTS &amp; BALANCES</div>
+        <h1 class="text-hero accounts-hero-title">Accounts Command Center</h1>
+        <p class="accounts-hero-subtitle">
+            Track every linked and manual account in one place across bank,
+            credit, investment, crypto, and cash.
+        </p>
+    </div>
+    <div class="page-banner-actions accounts-banner-actions">
+        <div id="payment-area" class="accounts-action-group">
+            <button type="button" id="add-manual-btn" class="btn btn-secondary">Add Manual Account</button>
+            <button type="button" id="payment-toggle-btn" class="btn btn-primary">
+                <span id="btn-txt">Link Bank Account</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-4 page-section accounts-kpi-grid">
+    <div class="stat-card">
+        <div class="stat-card__label">Total Assets</div>
+        <div id="kpi-total-assets" class="stat-card__value">E£115,751.59</div>
+        <div class="stat-card__delta stat-card__delta--positive">+2.5%</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__label">Total Liabilities</div>
+        <div id="liabilities" class="stat-card__value amount-negative" data-value="-2860.47">-E£2,860.47</div>
+        <div class="stat-card__delta stat-card__delta--negative">+3.6%</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__label">Net Position</div>
+        <div id="kpi-net-position" class="stat-card__value">E£112,891.12</div>
+        <div class="stat-card__delta stat-card__delta--positive">+E£4,038.00 this period</div>
+    </div>
+    <div class="stat-card">
+        <div class="stat-card__label">Linked Accounts</div>
+        <div id="kpi-linked-accounts" class="stat-card__value">4</div>
+        <div class="badge badge-neutral badge-manual">2 manual</div>
+    </div>
+</div>
+
+<div id="account-overview" class="stat-card">
+    <div class="first section accounts-overview-header-row">
+        <div class="accounts-overview-copy">
+            <header id="accounts-header" class="text-section">Accounts Overview</header>
+            <p class="accounts-overview-subtitle">Live balances grouped by account type and institution.</p>
+        </div>
+
+        <div class="account-category-tabs-container">
+            <input type="radio" id="tab-all-accounts" name="dashboard-account-tabs" class="hidden-tab-input" checked />
+            <label for="tab-all-accounts" class="visual-tab-button">All</label>
+
+            <input type="radio" id="tab-bank-accounts" name="dashboard-account-tabs" class="hidden-tab-input" />
+            <label for="tab-bank-accounts" class="visual-tab-button">Bank</label>
+
+            <input type="radio" id="tab-credit-accounts" name="dashboard-account-tabs" class="hidden-tab-input" />
+            <label for="tab-credit-accounts" class="visual-tab-button">Credit</label>
+
+            <input type="radio" id="tab-investment-accounts" name="dashboard-account-tabs" class="hidden-tab-input" />
+            <label for="tab-investment-accounts" class="visual-tab-button">Investment</label>
+
+            <input type="radio" id="tab-crypto-accounts" name="dashboard-account-tabs" class="hidden-tab-input" />
+            <label for="tab-crypto-accounts" class="visual-tab-button">Crypto</label>
+
+            <input type="radio" id="tab-cash-accounts" name="dashboard-account-tabs" class="hidden-tab-input" />
+            <label for="tab-cash-accounts" class="visual-tab-button">Cash</label>
+        </div>
+    </div>
+    <hr class="accounts-divider" />
+
+    <div id="accounts-flip-row" class="accounts-flip-row"></div>
+    <p id="accounts-flip-empty" class="accounts-flip-empty" style="display: none">
+        No accounts in this category yet.
+    </p>
+</div>
+
+<div class="grid grid-cols-12 page-section accounts-lower-grid">
+    <div id="Recent-activity" class="stat-card col-span-8">
+        <div class="recent-activity-header-row">
+            <div>
+                <header id="recent-activity-header" class="text-section">Recent Account Activity</header>
+                <p class="text-label">Latest balance-impacting transactions across all accounts.</p>
+            </div>
+            <a href="#" class="btn btn-ghost recent-activity-link">View all transactions</a>
+        </div>
+
+        <table class="recent-activity-table">
+            <thead>
+                <tr>
+                    <th class="text-label">Date</th>
+                    <th class="text-label">Description</th>
+                    <th class="text-label">Account</th>
+                    <th class="text-label ra-col-right">Amount</th>
+                </tr>
+            </thead>
+            <tbody id="recent-activity-tbody">
+                <tr class="recent-activity-details">
+                    <td class="ra-col institution-text">Mar 16, 2026</td>
+                    <td class="ra-col institution-text">Payroll Deposit</td>
+                    <td class="ra-col institution-text">Chase Checking</td>
+                    <td class="ra-col ra-col-right institution-text">+E£4,200.00</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <aside class="stat-card quick-actions-card col-span-4">
+        <header class="text-section quick-actions-title">Quick Actions</header>
+
+        <div class="quick-actions-list">
+            <a href="#" class="quick-action-item">
+                <span>Add Transaction</span>
+                <span aria-hidden="true">&rarr;</span>
+            </a>
+            <a href="#" class="quick-action-item">
+                <span>Import Statements</span>
+                <span aria-hidden="true">&rarr;</span>
+            </a>
+            <a href="#" class="quick-action-item">
+                <span>Run Balance Report</span>
+                <span aria-hidden="true">&rarr;</span>
+            </a>
+            <a href="#" class="quick-action-item">
+                <span>Review Recurring Charges</span>
+                <span aria-hidden="true">&rarr;</span>
+            </a>
+        </div>
+
+        <div class="quick-actions-sync card">
+            <div class="text-label">Next sync window</div>
+            <p class="quick-sync-time">Mar 25, 2026 &bull; 6:03 AM</p>
+            <p class="text-caption">Linked institutions refresh in background every 4 hours.</p>
+        </div>
+    </aside>
+</div>
+
+<!-- Link Bank Account Modal -->
+<div class="payment-background" id="link-account-backdrop"></div>
+
+<div id="paymentprompt" class="card link-bank-modal" role="dialog" aria-modal="true" aria-labelledby="link-account-title">
+    <div class="link-bank-modal__header">
+        <div>
+            <p class="text-label">Secure Connection</p>
+            <h2 id="link-account-title" class="text-section">Link Bank Account</h2>
+        </div>
+        <button type="button" id="payment-close-btn" class="close-btn" aria-label="Close link account form">&times;</button>
+    </div>
+
+    <p class="link-bank-subtitle">
+        Connect an account to keep balances, activity, and account health in sync with your new Accounts Overview.
+    </p>
+
+    <div class="link-provider-row" aria-label="Supported providers" role="group">
+        <button type="button" class="provider-tab active" data-provider="plaid">Plaid</button>
+        <button type="button" class="provider-tab" data-provider="finicity">Finicity</button>
+        <button type="button" class="provider-tab" data-provider="mx">MX</button>
+        <button type="button" class="provider-tab" data-provider="manual">Manual Sync</button>
+    </div>
+
+    <div class="link-provider-copy" id="link-provider-copy" aria-live="polite">
+        A secure redirect opens in a new window for sign in.
+    </div>
+
+    <form id="formcard" class="link-bank-form" method="POST" action="#">
+        <input type="hidden" id="link-provider-input" name="provider" value="plaid" />
+
+        <div class="link-form-layout">
+            <fieldset class="link-bank-fieldset">
+                <legend class="sr-only">Account Details</legend>
+                <div class="link-bank-grid">
+                    <div class="field-group field-group--wide">
+                        <label class="form-label" for="institution-name">Institution Name</label>
+                        <input type="text" id="institution-name" class="form-input" name="institution"
+                               placeholder="e.g. Chase Bank" autocomplete="organization" required />
+                    </div>
+
+                    <div class="field-group">
+                        <label class="form-label" for="account-type">Account Type</label>
+                        <select id="account-type" class="form-input" name="accountType" required>
+                            <option value="" disabled selected>Select account type</option>
+                            <option value="checking">Checking</option>
+                            <option value="savings">Savings</option>
+                            <option value="credit">Credit Card</option>
+                            <option value="investment">Investment</option>
+                            <option value="crypto">Crypto Wallet</option>
+                            <option value="cash">Cash / Other</option>
+                        </select>
+                    </div>
+
+                    <div class="field-group">
+                        <label class="form-label" for="account-nickname">Account Nickname</label>
+                        <input type="text" id="account-nickname" class="form-input" name="nickname"
+                               placeholder="Daily Spending" autocomplete="off" />
+                    </div>
+
+                    <div class="field-group">
+                        <label class="form-label" for="account-last4">Last 4 Digits</label>
+                        <input type="text" id="account-last4" class="form-input" name="last4"
+                               placeholder="1234" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required />
+                    </div>
+
+                    <div class="field-group">
+                        <label class="form-label" for="opening-balance">Opening Balance</label>
+                        <input type="number" id="opening-balance" class="form-input" name="openingBalance"
+                               placeholder="0.00" step="0.01" min="0" required />
+                    </div>
+
+                    <div class="field-group">
+                        <label class="form-label" for="currency-select">Currency</label>
+                        <select id="currency-select" class="form-input" name="currency" required>
+                            <option value="EGP" selected>EGP</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="CAD">CAD</option>
+                        </select>
+                    </div>
+
+                    <div class="field-group dynamic-field" data-account-types="checking savings" hidden>
+                        <label class="form-label" for="routing-number">Routing Number</label>
+                        <input type="text" id="routing-number" class="form-input" name="routingNumber"
+                               placeholder="9-digit routing number" inputmode="numeric" pattern="[0-9]{9}" maxlength="9" disabled />
+                    </div>
+
+                    <div class="field-group dynamic-field" data-account-types="credit" hidden>
+                        <label class="form-label" for="credit-limit">Credit Limit</label>
+                        <input type="number" id="credit-limit" class="form-input" name="creditLimit"
+                               placeholder="0.00" min="0" step="0.01" disabled />
+                    </div>
+
+                    <div class="field-group field-group--wide dynamic-field" data-account-types="investment crypto" hidden>
+                        <label class="form-label" for="portfolio-source">Portfolio Source</label>
+                        <input type="text" id="portfolio-source" class="form-input" name="portfolioSource"
+                               placeholder="Broker, wallet provider, or exchange" disabled />
+                    </div>
+                </div>
+            </fieldset>
+
+            <aside class="link-preview-card" aria-label="Live account preview">
+                <p class="text-label">Preview</p>
+                <h3 class="link-preview-title" id="preview-name">New Institution</h3>
+                <p class="link-preview-type" id="preview-type">Select account type</p>
+
+                <div class="link-preview-row">
+                    <span class="text-caption">Ending</span>
+                    <strong id="preview-last4">••••</strong>
+                </div>
+
+                <div class="link-preview-row">
+                    <span class="text-caption">Starting Balance</span>
+                    <strong id="preview-balance">E£0.00</strong>
+                </div>
+
+                <div class="link-preview-row">
+                    <span class="text-caption">Provider</span>
+                    <strong id="preview-provider">Plaid</strong>
+                </div>
+            </aside>
+        </div>
+
+        <label class="link-consent-row" for="sync-consent">
+            <input type="checkbox" id="sync-consent" required />
+            <span>I authorize read-only sync for balances and transactions.</span>
+        </label>
+
+        <div class="link-bank-actions">
+            <button type="button" id="payment-cancel-btn" class="btn btn-secondary">Cancel</button>
+            <button type="submit" id="paybtn" class="btn btn-primary">Link Account</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script>
+        window.ACTIVE_PAGE = "accounts";
+        window.USER_NAME = "@(User.Identity?.Name ?? "User")";
+    </script>
+    <script src="~/js/utils.js" asp-append-version="true"></script>
+    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
+    <script src="~/js/accounts-overview.js" asp-append-version="true"></script>
+}

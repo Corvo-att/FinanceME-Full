@@ -1,0 +1,129 @@
+@page
+@model FinanceME.Areas.Identity.Pages.Account.RegisterModel
+@{
+    Layout = null;
+    ViewData["Title"] = "Sign Up";
+}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - FinanceME</title>
+    <link rel="icon" type="image/png" href="~/Logo/logo_transparent.png" />
+    <link rel="stylesheet" href="~/css/variables.css" />
+    <link rel="stylesheet" href="~/css/base.css" />
+    <link rel="stylesheet" href="~/css/components.css" />
+    <link rel="stylesheet" href="~/css/auth.css" />
+</head>
+<body class="auth-page">
+    <main class="auth-shell">
+        <aside class="auth-brand" aria-label="FinanceME onboarding context">
+            <div>
+                <div class="auth-brand__masthead">
+                    <a asp-controller="Home" asp-action="Index" class="auth-brand__logo" aria-label="FinanceME home">
+                        <img src="~/Logo/logo_transparent.png" alt="FinanceME logo" />
+                        <span class="auth-brand__wordmark">Finance<span>ME</span></span>
+                    </a>
+                    <span class="auth-kicker">Account Activation</span>
+                </div>
+                <h1 class="auth-brand__title">Build your personal <em>finance cockpit</em>.</h1>
+                <p class="auth-brand__copy">Set up in under 60 seconds. Your data is encrypted, owned only by you, and accessible whenever you need it.</p>
+            </div>
+
+            <div class="auth-steps">
+                <div class="auth-step active">
+                    <span class="index">01</span>
+                    <span class="label">Create account</span>
+                </div>
+                <div class="auth-step">
+                    <span class="index">02</span>
+                    <span class="label">Link accounts</span>
+                </div>
+                <div class="auth-step">
+                    <span class="index">03</span>
+                    <span class="label">Track &amp; grow</span>
+                </div>
+            </div>
+
+            <div class="auth-proof-list">
+                <div class="auth-proof-item">
+                    <span class="label">Linked Account Types</span>
+                    <span class="value">Bank · Credit · Investment · Crypto · Cash</span>
+                </div>
+                <div class="auth-proof-item">
+                    <span class="label">Budget Tracking</span>
+                    <span class="value positive">Automated — zero manual entry</span>
+                </div>
+                <div class="auth-proof-item">
+                    <span class="label">Data Security</span>
+                    <span class="value positive">AES-256 + Identity lockout</span>
+                </div>
+            </div>
+
+            <p class="auth-brand__footnote">No credit card required &bull; Cancel anytime &bull; 100% private</p>
+        </aside>
+
+
+        <section class="auth-stage">
+            <div class="auth-panel">
+                <a asp-controller="Home" asp-action="Index" class="auth-back-link" aria-label="Back to landing page">
+                    <span aria-hidden="true">&larr;</span>
+                    Back to Landing
+                </a>
+
+                <header class="auth-panel__head">
+                    <h2 class="auth-panel__title">Create Account</h2>
+                    <p class="auth-panel__subtitle">Set up your secure profile.</p>
+                </header>
+
+                <form method="post" class="auth-form" novalidate>
+                    <input asp-for="ReturnUrl" type="hidden" />
+                    <div asp-validation-summary="ModelOnly" class="auth-status error"></div>
+
+                    <div class="form-group">
+                        <label class="form-label" asp-for="Input.FullName"></label>
+                        <input class="form-input" asp-for="Input.FullName" autocomplete="name" placeholder="James Carter" />
+                        <span asp-validation-for="Input.FullName" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" asp-for="Input.Email"></label>
+                        <input class="form-input" asp-for="Input.Email" autocomplete="email" placeholder="you@domain.com" />
+                        <span asp-validation-for="Input.Email" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" asp-for="Input.Password"></label>
+                        <div class="auth-input-wrap">
+                            <input class="form-input" asp-for="Input.Password" autocomplete="new-password" id="signup-password" data-password-strength placeholder="At least 8 characters" />
+                            <button type="button" class="auth-toggle-pass" data-toggle-password="signup-password" aria-label="Show password" aria-pressed="false">Show</button>
+                        </div>
+                        <div class="auth-strength" aria-live="polite">
+                            <div class="auth-strength__bar"><div class="auth-strength__fill"></div></div>
+                            <p class="auth-strength__text">Add a stronger password</p>
+                        </div>
+                        <span asp-validation-for="Input.Password" class="text-danger"></span>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label" asp-for="Input.ConfirmPassword"></label>
+                        <div class="auth-input-wrap">
+                            <input class="form-input" asp-for="Input.ConfirmPassword" autocomplete="new-password" id="signup-confirm-password" placeholder="Repeat your password" />
+                            <button type="button" class="auth-toggle-pass" data-toggle-password="signup-confirm-password" aria-label="Show confirm password" aria-pressed="false">Show</button>
+                        </div>
+                        <span asp-validation-for="Input.ConfirmPassword" class="text-danger"></span>
+                    </div>
+
+                    <button class="btn btn-primary" type="submit">Create Secure Account</button>
+                </form>
+
+                <p class="auth-foot">Already have an account? <a asp-page="./Login" asp-route-returnUrl="@Model.ReturnUrl">Log in</a></p>
+            </div>
+        </section>
+    </main>
+
+    <script src="~/js/auth.js"></script>
+    <partial name="_ValidationScriptsPartial" />
+</body>
+</html>
