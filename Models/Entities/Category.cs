@@ -1,3 +1,4 @@
+using FinanceME.Enums;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
@@ -11,6 +12,8 @@ namespace FinanceME.Models.Entities
         public string UserId { get; set; } = string.Empty;
         [ForeignKey(nameof(UserId))]
         public virtual User User { get; set; } = null!;
+
+        
 
         [Required]
         [MaxLength(100)]
