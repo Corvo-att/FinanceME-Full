@@ -139,10 +139,22 @@ namespace FinanceME.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST: Accounts/Deactivate/5 — soft-delete (keep transaction history intact)
-        [HttpPost]
+        // GET: Accounts/Delete/5
+        public async Task<IActionResult> Delete(int id)
+        {
+            var userId = _userManager.GetUserId(User)!;
+            var account = await _context.Accounts
+                .FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
+
+            if (account == null) return NotFound();
+
+            return View(account);
+        }
+
+        // POST: Accounts/Delete/5 — soft-delete (keep transaction history intact)
+        [HttpPost, ActionName("Delete")]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Deactivate(int id)
+        public async Task<IActionResult> DeleteConfirmed(int id)
         {
             var userId = _userManager.GetUserId(User)!;
             var account = await _context.Accounts

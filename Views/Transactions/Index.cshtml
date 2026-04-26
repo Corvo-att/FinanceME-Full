@@ -1,0 +1,509 @@
+@model IEnumerable<FinanceME.Models.Entities.Transaction>
+@using FinanceME.Enums
+
+@{
+    ViewData["Title"] = "Transactions";
+    var accounts = Model.Select(t => t.Account).Where(a => a != null).DistinctBy(a => a!.Id).ToList();
+    var categories = Model.Select(t => t.Category).Where(c => c != null).DistinctBy(c => c!.Id).ToList();
+    var totalCount = Model.Count();
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/transactions.css" asp-append-version="true" />
+    <style>
+        /* ── Page Banner ── */
+        .transactions-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            gap: var(--space-lg);
+            flex-wrap: wrap;
+            padding: var(--space-lg) var(--space-xl);
+            margin-bottom: var(--space-xl);
+            background: linear-gradient(120deg, rgba(255,255,255,0.01) 22%, rgba(201,168,76,0.07) 53%, rgba(255,255,255,0.01) 84%), var(--bg-surface);
+            border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg);
+        }
+        .tx-page-title { font-size: 28px; font-family: var(--font-ui); font-weight: 700; color: var(--text-primary); margin: 0 0 6px; }
+        .tx-page-subtitle { font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.5; }
+        .tx-header-actions { display: flex; gap: var(--space-sm); align-items: center; flex-shrink: 0; }
+
+        /* ── Filter Bar ── */
+        .filter-bar {
+            display: flex;
+            gap: var(--space-md);
+            margin-bottom: var(--space-md);
+            background: var(--bg-surface);
+            padding: var(--space-md);
+            border-radius: var(--radius-lg);
+            border: 1px solid var(--border-subtle);
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .filter-bar .input-group { display: flex; flex-direction: column; gap: var(--space-xs); }
+        .filter-bar .input-group label { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-secondary); font-family: var(--font-ui); }
+        .filter-bar .input-group input,
+        .filter-bar .input-group select {
+            padding: 0 12px; height: 36px;
+            background: var(--bg-base); border: 1px solid var(--border-strong);
+            color: var(--text-primary); border-radius: 6px;
+            font-family: var(--font-ui); font-size: 14px; min-width: 160px;
+        }
+        .filter-bar .input-group input:focus,
+        .filter-bar .input-group select:focus { border-color: var(--accent-gold); outline: none; box-shadow: 0 0 0 2px rgba(201,168,76,0.15); }
+        .filter-bar-spacer { flex: 1; }
+        .filter-bar-actions { display: flex; gap: var(--space-sm); align-items: flex-end; }
+
+        /* ── Transactions Summary Bar ── */
+        .tx-summary-bar {
+            display: flex; gap: var(--space-md); margin-bottom: var(--space-md);
+        }
+        .tx-summary-card {
+            flex: 1; background: var(--bg-surface); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg);
+            display: flex; flex-direction: column; gap: 4px;
+        }
+        .tx-summary-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
+        .tx-summary-value { font-family: var(--font-mono); font-size: 20px; font-weight: 600; color: var(--text-primary); }
+        .tx-summary-value.positive { color: var(--positive); }
+        .tx-summary-value.negative { color: var(--negative); }
+
+        /* ── Transactions Table Card ── */
+        .tx-table-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); overflow: hidden; }
+        .tx-table-header { display: flex; justify-content: space-between; align-items: center; padding: var(--space-md) var(--space-lg); border-bottom: 1px solid var(--border-subtle); }
+        .tx-table-title { font-size: 14px; font-weight: 600; color: var(--text-primary); }
+        .tx-count-badge { font-size: 12px; color: var(--text-secondary); background: var(--bg-elevated); padding: 2px 8px; border-radius: 20px; }
+
+        .data-table { width: 100%; border-collapse: collapse; }
+        .data-table thead th {
+            padding: 10px var(--space-lg); text-align: left;
+            font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+            color: var(--text-secondary); border-bottom: 1px solid var(--border-subtle);
+            background: rgba(255,255,255,0.01); font-weight: 600; white-space: nowrap;
+        }
+        .data-table tbody tr {
+            border-bottom: 1px solid var(--border-subtle);
+            transition: background 150ms ease, box-shadow 150ms ease;
+            cursor: pointer;
+        }
+        .data-table tbody tr:hover {
+            background: var(--bg-elevated);
+            box-shadow: inset 3px 0 0 var(--accent-gold);
+        }
+        .data-table tbody tr:last-child { border-bottom: none; }
+        .data-table td { padding: 14px var(--space-lg); vertical-align: middle; font-size: 14px; color: var(--text-primary); }
+        .data-table .col-right { text-align: right; }
+
+        .tx-date { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
+        .tx-desc { font-weight: 500; }
+        .tx-desc-notes { font-size: 11px; color: var(--text-secondary); margin-top: 2px; }
+        .tx-account { font-size: 13px; color: var(--text-secondary); }
+        .tx-category { display: inline-flex; align-items: center; gap: 7px; font-size: 13px; }
+        .category-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+        .tx-type-badge {
+            display: inline-block; padding: 2px 8px; border-radius: 10px;
+            font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .badge-expense { background: rgba(224,92,92,0.12); color: var(--negative); }
+        .badge-income  { background: rgba(46,204,138,0.12); color: var(--positive); }
+        .badge-transfer{ background: rgba(76,142,245,0.12); color: var(--accent-blue); }
+
+        .tx-amount { font-family: var(--font-mono); font-size: 14px; font-weight: 600; white-space: nowrap; }
+        .amount-positive { color: var(--positive); }
+        .amount-negative { color: var(--negative); }
+        .amount-transfer { color: var(--accent-blue); }
+
+        .tx-actions { display: flex; justify-content: flex-end; gap: 4px; opacity: 0; transition: opacity 150ms ease; }
+        .data-table tbody tr:hover .tx-actions { opacity: 1; }
+
+        /* ── Empty State ── */
+        .tx-empty {
+            text-align: center; padding: 64px var(--space-xl);
+            display: flex; flex-direction: column; align-items: center; gap: var(--space-md);
+        }
+        .tx-empty-icon { color: var(--text-muted); margin-bottom: var(--space-sm); }
+        .tx-empty-title { font-size: 16px; font-weight: 600; color: var(--text-primary); }
+        .tx-empty-subtitle { font-size: 13px; color: var(--text-secondary); }
+
+        /* ── Pagination ── */
+        .pagination {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: var(--space-md); padding: var(--space-sm) var(--space-lg);
+            background: var(--bg-surface); border-radius: var(--radius-lg);
+            border: 1px solid var(--border-subtle);
+        }
+        .pagination-info { font-size: 12px; color: var(--text-secondary); }
+        .pagination-controls { display: flex; gap: var(--space-xs); }
+        .page-btn {
+            height: 32px; min-width: 32px; padding: 0 10px;
+            background: transparent; border: 1px solid var(--border-subtle);
+            border-radius: 6px; color: var(--text-secondary);
+            font-size: 13px; cursor: pointer; transition: all 150ms ease;
+        }
+        .page-btn:hover:not(:disabled) { background: var(--bg-elevated); color: var(--text-primary); border-color: var(--border-strong); }
+        .page-btn.active { background: var(--accent-gold); color: #000; border-color: var(--accent-gold); font-weight: 700; }
+        .page-btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+        /* ── Toast Notification ── */
+        .toast {
+            position: fixed; bottom: 24px; right: 24px; z-index: var(--z-toast);
+            background: var(--bg-elevated); border: 1px solid var(--border-strong);
+            border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg);
+            color: var(--text-primary); font-size: 14px; font-weight: 500;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5); display: none;
+            animation: slideIn 0.25s ease;
+        }
+        .toast.show { display: block; }
+        .toast.success { border-color: rgba(46,204,138,0.3); }
+        @@keyframes slideIn { from { transform: translateY(16px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+
+        @@media (max-width: 900px) {
+            .tx-summary-bar { flex-wrap: wrap; }
+            .data-table thead th:nth-child(3),
+            .data-table tbody td:nth-child(3) { display: none; }
+        }
+        @@media (max-width: 680px) {
+            .transactions-header { padding: var(--space-md); }
+            .data-table thead th:nth-child(4),
+            .data-table tbody td:nth-child(4) { display: none; }
+        }
+    </style>
+}
+
+@* ── Toast for TempData ── *@
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="toast success show" id="tx-toast">✓ @TempData["SuccessMessage"]</div>
+}
+
+@* ══════════════════════════════════════════════════════════════
+   PAGE BANNER
+═══════════════════════════════════════════════════════════════ *@
+<header class="transactions-header">
+    <div>
+        <h1 class="tx-page-title">Transactions</h1>
+        <p class="tx-page-subtitle">View and manage all your historical spending and income.</p>
+    </div>
+    <div class="tx-header-actions">
+        <a asp-action="Create" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+            Add Transaction
+        </a>
+    </div>
+</header>
+
+@* ══════════════════════════════════════════════════════════════
+   SUMMARY CARDS
+═══════════════════════════════════════════════════════════════ *@
+@{
+    var totalIncome = Model.Where(t => t.Type == TransactionType.Income).Sum(t => t.Amount);
+    var totalExpense = Model.Where(t => t.Type == TransactionType.Expense).Sum(t => t.Amount);
+    var netFlow = totalIncome - totalExpense;
+}
+<div class="tx-summary-bar">
+    <div class="tx-summary-card">
+        <div class="tx-summary-label">Total Income</div>
+        <div class="tx-summary-value positive">+@totalIncome.ToString("C")</div>
+    </div>
+    <div class="tx-summary-card">
+        <div class="tx-summary-label">Total Expenses</div>
+        <div class="tx-summary-value negative">-@totalExpense.ToString("C")</div>
+    </div>
+    <div class="tx-summary-card">
+        <div class="tx-summary-label">Net Flow</div>
+        <div class="tx-summary-value @(netFlow >= 0 ? "positive" : "negative")">
+            @(netFlow >= 0 ? "+" : "")@netFlow.ToString("C")
+        </div>
+    </div>
+    <div class="tx-summary-card">
+        <div class="tx-summary-label">Transactions</div>
+        <div class="tx-summary-value">@totalCount</div>
+    </div>
+</div>
+
+@* ══════════════════════════════════════════════════════════════
+   FILTER BAR
+═══════════════════════════════════════════════════════════════ *@
+<div class="filter-bar">
+    <div class="input-group">
+        <label for="filter-search">Search</label>
+        <input type="text" id="filter-search" placeholder="Description, category..." />
+    </div>
+    <div class="input-group">
+        <label for="filter-account">Account</label>
+        <select id="filter-account">
+            <option value="">All Accounts</option>
+            @foreach (var acc in accounts)
+            {
+                <option value="@acc!.Name">@acc.Name</option>
+            }
+        </select>
+    </div>
+    <div class="input-group">
+        <label for="filter-type">Type</label>
+        <select id="filter-type">
+            <option value="">All Types</option>
+            <option value="Income">Income</option>
+            <option value="Expense">Expense</option>
+            <option value="Transfer">Transfer</option>
+        </select>
+    </div>
+    <div class="input-group">
+        <label for="filter-category">Category</label>
+        <select id="filter-category">
+            <option value="">All Categories</option>
+            @foreach (var cat in categories)
+            {
+                <option value="@cat!.Name">@cat.Name</option>
+            }
+        </select>
+    </div>
+    <div class="filter-bar-spacer"></div>
+    <div class="filter-bar-actions">
+        <button class="btn btn-ghost" id="filter-reset" style="height:36px;">Reset Filters</button>
+    </div>
+</div>
+
+@* ══════════════════════════════════════════════════════════════
+   TRANSACTIONS TABLE
+═══════════════════════════════════════════════════════════════ *@
+<div class="tx-table-card">
+    <div class="tx-table-header">
+        <span class="tx-table-title">All Transactions</span>
+        <span class="tx-count-badge" id="visible-count">@totalCount entries</span>
+    </div>
+
+    @if (Model.Any())
+    {
+        <table class="data-table" id="tx-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Account</th>
+                    <th>Category</th>
+                    <th>Type</th>
+                    <th class="col-right">Amount</th>
+                    <th class="col-right">Actions</th>
+                </tr>
+            </thead>
+            <tbody id="tx-tbody">
+                @foreach (var item in Model)
+                {
+                    var amountClass = item.Type == TransactionType.Expense ? "amount-negative"
+                                    : item.Type == TransactionType.Income  ? "amount-positive"
+                                    : "amount-transfer";
+                    var amountSign  = item.Type == TransactionType.Expense ? "−"
+                                    : item.Type == TransactionType.Income  ? "+"
+                                    : "↔";
+                    var typeBadge   = item.Type == TransactionType.Expense  ? "badge-expense"
+                                    : item.Type == TransactionType.Income   ? "badge-income"
+                                    : "badge-transfer";
+                    var catColor    = item.Category?.Color ?? "var(--text-muted)";
+                    var catName     = item.Category?.Name ?? "Uncategorized";
+                    var accountName = item.Account?.Name ?? "—";
+
+                    <tr class="tx-row"
+                        data-desc="@item.Description.ToLower()"
+                        data-account="@accountName"
+                        data-type="@item.Type.ToString()"
+                        data-category="@catName"
+                        onclick="window.location.href='@Url.Action("Details", new { id = item.Id })'">
+                        <td>
+                            <div class="tx-date">@item.Date.ToString("MMM dd, yyyy")</div>
+                        </td>
+                        <td>
+                            <div class="tx-desc">@item.Description</div>
+                            @if (!string.IsNullOrEmpty(item.Notes))
+                            {
+                                <div class="tx-desc-notes">@item.Notes</div>
+                            }
+                        </td>
+                        <td>
+                            <div class="tx-account">@accountName</div>
+                        </td>
+                        <td>
+                            <span class="tx-category">
+                                <span class="category-dot" style="background: @catColor;"></span>
+                                @catName
+                            </span>
+                        </td>
+                        <td>
+                            <span class="tx-type-badge @typeBadge">@item.Type</span>
+                        </td>
+                        <td class="col-right">
+                            <span class="tx-amount @amountClass">@amountSign @item.Amount.ToString("C")</span>
+                        </td>
+                        <td class="col-right" onclick="event.stopPropagation()">
+                            <div class="tx-actions">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-ghost btn-sm">Edit</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-ghost btn-sm" style="color:var(--negative)">Delete</a>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        @* ── Empty state shown when filters yield no results ── *@
+        <div id="tx-no-results" style="display:none;" class="tx-empty">
+            <div class="tx-empty-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+            </div>
+            <div class="tx-empty-title">No transactions match your filters</div>
+            <div class="tx-empty-subtitle">Try adjusting the search or filters above.</div>
+            <button class="btn btn-ghost" onclick="resetFilters()">Clear Filters</button>
+        </div>
+    }
+    else
+    {
+        <div class="tx-empty">
+            <div class="tx-empty-icon">
+                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                    <line x1="8" y1="21" x2="16" y2="21"></line>
+                    <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+            </div>
+            <div class="tx-empty-title">No transactions yet</div>
+            <div class="tx-empty-subtitle">Start tracking your finances by adding your first transaction.</div>
+            <a asp-action="Create" class="btn btn-primary">Add Transaction</a>
+        </div>
+    }
+</div>
+
+@* ── Pagination (shown only when there are rows) ── *@
+@if (Model.Any())
+{
+    <div class="pagination">
+        <div class="pagination-info" id="pagination-info">Showing all @totalCount entries</div>
+        <div class="pagination-controls" id="pagination-controls"></div>
+    </div>
+}
+
+@section Scripts {
+<script>
+(function () {
+    const ROWS_PER_PAGE = 20;
+    let currentPage = 1;
+    let filteredRows = [];
+
+    const searchInput   = document.getElementById('filter-search');
+    const accountSelect = document.getElementById('filter-account');
+    const typeSelect    = document.getElementById('filter-type');
+    const categorySelect= document.getElementById('filter-category');
+    const resetBtn      = document.getElementById('filter-reset');
+    const tbody         = document.getElementById('tx-tbody');
+    const noResults     = document.getElementById('tx-no-results');
+    const visibleCount  = document.getElementById('visible-count');
+    const paginationInfo= document.getElementById('pagination-info');
+    const paginationCtrl= document.getElementById('pagination-controls');
+
+    if (!tbody) return; // no rows at all
+
+    const allRows = Array.from(tbody.querySelectorAll('.tx-row'));
+
+    function applyFilters() {
+        const search   = (searchInput?.value || '').toLowerCase().trim();
+        const account  = accountSelect?.value || '';
+        const type     = typeSelect?.value || '';
+        const category = categorySelect?.value || '';
+
+        filteredRows = allRows.filter(row => {
+            const matchSearch   = !search   || row.dataset.desc.includes(search) || row.dataset.category.toLowerCase().includes(search);
+            const matchAccount  = !account  || row.dataset.account === account;
+            const matchType     = !type     || row.dataset.type === type;
+            const matchCategory = !category || row.dataset.category === category;
+            return matchSearch && matchAccount && matchType && matchCategory;
+        });
+
+        currentPage = 1;
+        renderPage();
+    }
+
+    function renderPage() {
+        const total = filteredRows.length;
+        const start = (currentPage - 1) * ROWS_PER_PAGE;
+        const end   = Math.min(start + ROWS_PER_PAGE, total);
+
+        // hide all rows first
+        allRows.forEach(r => r.style.display = 'none');
+
+        if (total === 0) {
+            if (noResults) noResults.style.display = '';
+            if (visibleCount) visibleCount.textContent = '0 entries';
+            if (paginationInfo) paginationInfo.textContent = 'No results';
+            if (paginationCtrl) paginationCtrl.innerHTML = '';
+            return;
+        }
+
+        if (noResults) noResults.style.display = 'none';
+
+        filteredRows.slice(start, end).forEach(r => r.style.display = '');
+
+        const showing = `Showing ${start + 1}–${end} of ${total} entries`;
+        if (visibleCount) visibleCount.textContent = `${total} entries`;
+        if (paginationInfo) paginationInfo.textContent = showing;
+
+        renderPagination(total);
+    }
+
+    function renderPagination(total) {
+        if (!paginationCtrl) return;
+        const totalPages = Math.ceil(total / ROWS_PER_PAGE);
+        if (totalPages <= 1) { paginationCtrl.innerHTML = ''; return; }
+
+        let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goPage(${currentPage - 1})">← Prev</button>`;
+
+        const delta = 2;
+        const range = [];
+        for (let i = Math.max(2, currentPage - delta); i <= Math.min(totalPages - 1, currentPage + delta); i++) {
+            range.push(i);
+        }
+
+        html += `<button class="page-btn ${currentPage === 1 ? 'active' : ''}" onclick="goPage(1)">1</button>`;
+        if (range[0] > 2) html += `<span style="color:var(--text-secondary);padding:0 4px;line-height:32px;">…</span>`;
+        range.forEach(p => { html += `<button class="page-btn ${currentPage === p ? 'active' : ''}" onclick="goPage(${p})">${p}</button>`; });
+        if (range[range.length - 1] < totalPages - 1) html += `<span style="color:var(--text-secondary);padding:0 4px;line-height:32px;">…</span>`;
+        if (totalPages > 1) html += `<button class="page-btn ${currentPage === totalPages ? 'active' : ''}" onclick="goPage(${totalPages})">${totalPages}</button>`;
+
+        html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goPage(${currentPage + 1})">Next →</button>`;
+        paginationCtrl.innerHTML = html;
+    }
+
+    window.goPage = function(page) {
+        currentPage = page;
+        renderPage();
+        document.querySelector('.tx-table-card').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+
+    window.resetFilters = function() {
+        if (searchInput) searchInput.value = '';
+        if (accountSelect) accountSelect.value = '';
+        if (typeSelect) typeSelect.value = '';
+        if (categorySelect) categorySelect.value = '';
+        applyFilters();
+    };
+
+    if (searchInput) searchInput.addEventListener('input', applyFilters);
+    if (accountSelect) accountSelect.addEventListener('change', applyFilters);
+    if (typeSelect) typeSelect.addEventListener('change', applyFilters);
+    if (categorySelect) categorySelect.addEventListener('change', applyFilters);
+    if (resetBtn) resetBtn.addEventListener('click', resetFilters);
+
+    // Initial render
+    filteredRows = [...allRows];
+    renderPage();
+
+    // Auto-dismiss toast
+    const toast = document.getElementById('tx-toast');
+    if (toast) setTimeout(() => toast.classList.remove('show'), 4000);
+})();
+</script>
+}

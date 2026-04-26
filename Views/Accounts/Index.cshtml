@@ -1,277 +1,369 @@
+@model IEnumerable<FinanceME.Models.Entities.Account>
+@using FinanceME.Enums
+
 @{
-    ViewData["Title"] = "Accounts Overview";
+    ViewData["Title"] = "Accounts";
+    var totalAssets      = Model.Where(a => a.Balance > 0).Sum(a => a.Balance);
+    var totalLiabilities = Model.Where(a => a.Balance < 0).Sum(a => a.Balance);
+    var netPosition      = totalAssets + totalLiabilities;
+    var accountCount     = Model.Count();
 }
 
 @section Styles {
     <link rel="stylesheet" href="~/css/AccOver.css" asp-append-version="true" />
     <script src="https://kit.fontawesome.com/b9a020078f.js" crossorigin="anonymous"></script>
+    <style>
+        /* ── Account flip cards ── */
+        .accounts-flip-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: var(--space-md);
+            padding: var(--space-md) 0;
+        }
+        .account-flip-card { perspective: 1000px; height: 170px; cursor: pointer; }
+        .account-flip-inner {
+            position: relative; width: 100%; height: 100%;
+            transition: transform 0.55s cubic-bezier(0.23, 1, 0.32, 1);
+            transform-style: preserve-3d;
+        }
+        .account-flip-card:hover .account-flip-inner { transform: rotateY(180deg); }
+        .card-face {
+            position: absolute; inset: 0; border-radius: var(--radius-lg);
+            backface-visibility: hidden; padding: var(--space-lg);
+            border: 1px solid var(--border-subtle);
+            display: flex; flex-direction: column; justify-content: space-between;
+        }
+        .card-front {
+            background: linear-gradient(155deg, rgba(26,26,36,0.9), rgba(17,17,24,0.97));
+        }
+        .card-back {
+            background: linear-gradient(155deg, rgba(30,26,18,0.95), rgba(17,17,24,0.97));
+            transform: rotateY(180deg);
+            justify-content: center; gap: var(--space-md);
+        }
+        .card-front-top { display: flex; justify-content: space-between; align-items: flex-start; }
+        .card-icon {
+            width: 38px; height: 38px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center; font-size: 18px;
+        }
+        .card-type-badge {
+            font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px;
+            padding: 3px 9px; border-radius: 20px;
+            background: rgba(255,255,255,0.06); color: var(--text-secondary);
+            border: 1px solid var(--border-subtle);
+        }
+        .card-name { font-weight: 700; font-size: 15px; color: var(--text-primary); margin-bottom: 2px; }
+        .card-institution { font-size: 12px; color: var(--text-secondary); }
+        .card-balance { font-family: var(--font-mono); font-size: 22px; font-weight: 600; }
+        .card-balance.positive { color: var(--positive); }
+        .card-balance.negative { color: var(--negative); }
+        .card-back-action {
+            display: flex; justify-content: space-between; gap: 8px;
+        }
+        .card-back-action a { flex: 1; text-align: center; }
+
+        /* ── Empty state ── */
+        .accounts-flip-empty {
+            text-align: center; padding: 48px; color: var(--text-secondary); font-size: 14px;
+        }
+
+        /* ── Lower grid ── */
+        .accounts-lower-grid {
+            display: grid; grid-template-columns: 1fr minmax(280px, 340px);
+            gap: var(--space-md); margin-top: var(--space-lg); align-items: start;
+        }
+        @@media (max-width: 1000px) { .accounts-lower-grid { grid-template-columns: 1fr; } }
+    </style>
 }
 
+@* ── Toast ── *@
+@if (TempData["SuccessMessage"] != null)
+{
+    <div id="acc-toast" style="position:fixed;bottom:24px;right:24px;z-index:500;background:var(--bg-elevated);border:1px solid rgba(46,204,138,0.3);border-radius:12px;padding:14px 20px;color:var(--text-primary);font-size:14px;font-weight:500;box-shadow:0 8px 32px rgba(0,0,0,0.5);">
+        ✓ @TempData["SuccessMessage"]
+    </div>
+}
+
+@* ══════════ HERO BANNER ══════════ *@
 <div class="page-banner accounts-page-banner">
     <div class="page-banner-content">
-        <div class="text-label">ACCOUNTS &amp; BALANCES</div>
-        <h1 class="text-hero accounts-hero-title">Accounts Command Center</h1>
-        <p class="accounts-hero-subtitle">
-            Track every linked and manual account in one place across bank,
-            credit, investment, crypto, and cash.
-        </p>
+        <div class="text-label" style="font-size:11px;text-transform:uppercase;letter-spacing:1.5px;color:var(--text-secondary);margin-bottom:6px;">ACCOUNTS &amp; BALANCES</div>
+        <h1 class="accounts-hero-title" style="font-family:var(--font-display);margin:0 0 10px;">Accounts Command Center</h1>
+        <p class="accounts-hero-subtitle">Track every linked and manual account in one place across bank, credit, investment, crypto, and cash.</p>
     </div>
     <div class="page-banner-actions accounts-banner-actions">
-        <div id="payment-area" class="accounts-action-group">
-            <button type="button" id="add-manual-btn" class="btn btn-secondary">Add Manual Account</button>
-            <button type="button" id="payment-toggle-btn" class="btn btn-primary">
+        <div class="accounts-action-group">
+            <a asp-action="Create" class="btn btn-secondary">Add Manual Account</a>
+            <button type="button" class="btn btn-primary" id="payment-toggle-btn">
                 <span id="btn-txt">Link Bank Account</span>
             </button>
         </div>
     </div>
 </div>
 
-<div class="grid grid-cols-4 page-section accounts-kpi-grid">
+@* ══════════ KPI STAT CARDS ══════════ *@
+<div class="grid grid-cols-4 accounts-kpi-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-md);margin-top:var(--space-lg);">
     <div class="stat-card">
         <div class="stat-card__label">Total Assets</div>
-        <div id="kpi-total-assets" class="stat-card__value">E£115,751.59</div>
-        <div class="stat-card__delta stat-card__delta--positive">+2.5%</div>
+        <div class="stat-card__value">@totalAssets.ToString("C")</div>
+        <div class="stat-card__delta stat-card__delta--positive">All positive balances</div>
     </div>
     <div class="stat-card">
         <div class="stat-card__label">Total Liabilities</div>
-        <div id="liabilities" class="stat-card__value amount-negative" data-value="-2860.47">-E£2,860.47</div>
-        <div class="stat-card__delta stat-card__delta--negative">+3.6%</div>
+        <div class="stat-card__value amount-negative" style="color:var(--negative);">@totalLiabilities.ToString("C")</div>
+        <div class="stat-card__delta stat-card__delta--negative">All negative balances</div>
     </div>
     <div class="stat-card">
         <div class="stat-card__label">Net Position</div>
-        <div id="kpi-net-position" class="stat-card__value">E£112,891.12</div>
-        <div class="stat-card__delta stat-card__delta--positive">+E£4,038.00 this period</div>
+        <div class="stat-card__value @(netPosition >= 0 ? "" : "amount-negative")" style="color:@(netPosition >= 0 ? "var(--positive)" : "var(--negative)");">@netPosition.ToString("C")</div>
+        <div class="stat-card__delta @(netPosition >= 0 ? "stat-card__delta--positive" : "stat-card__delta--negative")">@(netPosition >= 0 ? "Healthy" : "In deficit")</div>
     </div>
     <div class="stat-card">
         <div class="stat-card__label">Linked Accounts</div>
-        <div id="kpi-linked-accounts" class="stat-card__value">4</div>
-        <div class="badge badge-neutral badge-manual">2 manual</div>
+        <div class="stat-card__value">@accountCount</div>
+        <div class="badge badge-neutral" style="width:fit-content;margin-top:8px;">@accountCount active</div>
     </div>
 </div>
 
-<div id="account-overview" class="stat-card">
+@* ══════════ ACCOUNTS OVERVIEW (tabs + flip cards) ══════════ *@
+<div id="account-overview" class="stat-card" style="margin-top:var(--space-lg);">
     <div class="first section accounts-overview-header-row">
         <div class="accounts-overview-copy">
             <header id="accounts-header" class="text-section">Accounts Overview</header>
-            <p class="accounts-overview-subtitle">Live balances grouped by account type and institution.</p>
+            <p class="accounts-overview-subtitle">Live balances grouped by account type. Hover a card to see actions.</p>
         </div>
-
         <div class="account-category-tabs-container">
-            <input type="radio" id="tab-all-accounts" name="dashboard-account-tabs" class="hidden-tab-input" checked />
-            <label for="tab-all-accounts" class="visual-tab-button">All</label>
-
-            <input type="radio" id="tab-bank-accounts" name="dashboard-account-tabs" class="hidden-tab-input" />
-            <label for="tab-bank-accounts" class="visual-tab-button">Bank</label>
-
-            <input type="radio" id="tab-credit-accounts" name="dashboard-account-tabs" class="hidden-tab-input" />
-            <label for="tab-credit-accounts" class="visual-tab-button">Credit</label>
-
-            <input type="radio" id="tab-investment-accounts" name="dashboard-account-tabs" class="hidden-tab-input" />
-            <label for="tab-investment-accounts" class="visual-tab-button">Investment</label>
-
-            <input type="radio" id="tab-crypto-accounts" name="dashboard-account-tabs" class="hidden-tab-input" />
-            <label for="tab-crypto-accounts" class="visual-tab-button">Crypto</label>
-
-            <input type="radio" id="tab-cash-accounts" name="dashboard-account-tabs" class="hidden-tab-input" />
-            <label for="tab-cash-accounts" class="visual-tab-button">Cash</label>
+            <input type="radio" id="tab-all"        name="acc-tabs" class="hidden-tab-input" checked />
+            <label for="tab-all"        class="visual-tab-button" data-filter="all">All</label>
+            <input type="radio" id="tab-checking"   name="acc-tabs" class="hidden-tab-input" />
+            <label for="tab-checking"   class="visual-tab-button" data-filter="Checking">Checking</label>
+            <input type="radio" id="tab-savings"    name="acc-tabs" class="hidden-tab-input" />
+            <label for="tab-savings"    class="visual-tab-button" data-filter="Savings">Savings</label>
+            <input type="radio" id="tab-credit"     name="acc-tabs" class="hidden-tab-input" />
+            <label for="tab-credit"     class="visual-tab-button" data-filter="CreditCard">Credit</label>
+            <input type="radio" id="tab-invest"     name="acc-tabs" class="hidden-tab-input" />
+            <label for="tab-invest"     class="visual-tab-button" data-filter="Investment">Investment</label>
+            <input type="radio" id="tab-cash"       name="acc-tabs" class="hidden-tab-input" />
+            <label for="tab-cash"       class="visual-tab-button" data-filter="Cash">Cash</label>
         </div>
     </div>
     <hr class="accounts-divider" />
 
-    <div id="accounts-flip-row" class="accounts-flip-row"></div>
-    <p id="accounts-flip-empty" class="accounts-flip-empty" style="display: none">
-        No accounts in this category yet.
-    </p>
+    @if (Model.Any())
+    {
+        <div id="accounts-flip-row" class="accounts-flip-row">
+            @foreach (var acc in Model)
+            {
+                var color = !string.IsNullOrEmpty(acc.Color) ? acc.Color : "#C9A84C";
+                var icon = acc.Type switch {
+                    AccountType.Checking   => "fa-building-columns",
+                    AccountType.Savings    => "fa-piggy-bank",
+                    AccountType.CreditCard => "fa-credit-card",
+                    AccountType.Investment => "fa-chart-line",
+                    AccountType.Loan       => "fa-hand-holding-dollar",
+                    AccountType.Cash       => "fa-money-bill-wave",
+                    _                      => "fa-wallet"
+                };
+                <div class="account-flip-card" data-type="@acc.Type.ToString()">
+                    <div class="account-flip-inner">
+                        <div class="card-face card-front">
+                            <div class="card-front-top">
+                                <div class="card-icon" style="background:@(color + "22"); color:@color;">
+                                    <i class="fa-solid @icon"></i>
+                                </div>
+                                <span class="card-type-badge">@acc.Type</span>
+                            </div>
+                            <div>
+                                <div class="card-name">@acc.Name</div>
+                                <div class="card-institution">@(string.IsNullOrEmpty(acc.Institution) ? "Manual Account" : acc.Institution)@(!string.IsNullOrEmpty(acc.AccountNumber) ? $" ····{acc.AccountNumber}" : "")</div>
+                            </div>
+                            <div class="card-balance @(acc.Balance >= 0 ? "positive" : "negative")">
+                                @acc.Balance.ToString("C")
+                            </div>
+                        </div>
+                        <div class="card-face card-back">
+                            <div>
+                                <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:4px;">Balance</div>
+                                <div class="card-balance @(acc.Balance >= 0 ? "positive" : "negative")" style="font-size:18px;">@acc.Balance.ToString("C")</div>
+                            </div>
+                            <div class="card-back-action">
+                                <a asp-action="Details" asp-route-id="@acc.Id" class="btn btn-ghost btn-sm">Details</a>
+                                <a asp-action="Edit"    asp-route-id="@acc.Id" class="btn btn-ghost btn-sm">Edit</a>
+                                <a asp-action="Delete"  asp-route-id="@acc.Id" class="btn btn-ghost btn-sm" style="color:var(--negative)">Remove</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+        <p id="accounts-flip-empty" class="accounts-flip-empty" style="display:none;">No accounts in this category yet.</p>
+    }
+    else
+    {
+        <div style="text-align:center;padding:64px 24px;">
+            <div style="font-size:14px;font-weight:600;color:var(--text-primary);margin-bottom:8px;">No accounts yet</div>
+            <p style="font-size:13px;color:var(--text-secondary);margin-bottom:20px;">Link a bank account or add a manual account to get started.</p>
+            <a asp-action="Create" class="btn btn-primary">Add Account</a>
+        </div>
+    }
 </div>
 
-<div class="grid grid-cols-12 page-section accounts-lower-grid">
-    <div id="Recent-activity" class="stat-card col-span-8">
+@* ══════════ LOWER GRID: Recent Activity + Quick Actions ══════════ *@
+<div class="accounts-lower-grid">
+    @* Recent Activity *@
+    <div id="Recent-activity" class="stat-card">
         <div class="recent-activity-header-row">
             <div>
                 <header id="recent-activity-header" class="text-section">Recent Account Activity</header>
-                <p class="text-label">Latest balance-impacting transactions across all accounts.</p>
+                <p class="text-label" style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Latest balance-impacting transactions across all accounts.</p>
             </div>
-            <a href="#" class="btn btn-ghost recent-activity-link">View all transactions</a>
+            <a asp-controller="Transactions" asp-action="Index" class="btn btn-ghost recent-activity-link">View all transactions</a>
         </div>
-
         <table class="recent-activity-table">
             <thead>
                 <tr>
-                    <th class="text-label">Date</th>
-                    <th class="text-label">Description</th>
                     <th class="text-label">Account</th>
-                    <th class="text-label ra-col-right">Amount</th>
+                    <th class="text-label">Type</th>
+                    <th class="text-label">Balance</th>
+                    <th class="text-label ra-col-right">Status</th>
                 </tr>
             </thead>
             <tbody id="recent-activity-tbody">
-                <tr class="recent-activity-details">
-                    <td class="ra-col institution-text">Mar 16, 2026</td>
-                    <td class="ra-col institution-text">Payroll Deposit</td>
-                    <td class="ra-col institution-text">Chase Checking</td>
-                    <td class="ra-col ra-col-right institution-text">+E£4,200.00</td>
-                </tr>
+                @foreach (var acc in Model.Take(6))
+                {
+                    <tr class="recent-activity-details">
+                        <td class="ra-col institution-text">@acc.Name</td>
+                        <td class="ra-col institution-text">@acc.Type</td>
+                        <td class="ra-col institution-text" style="font-family:var(--font-mono);color:@(acc.Balance >= 0 ? "var(--positive)" : "var(--negative)");">@acc.Balance.ToString("C")</td>
+                        <td class="ra-col ra-col-right">
+                            <span class="badge @(acc.Balance >= 0 ? "badge-success" : "badge-danger")" style="font-size:11px;padding:2px 8px;border-radius:10px;background:@(acc.Balance >= 0 ? "rgba(46,204,138,0.12)" : "rgba(224,92,92,0.12)");color:@(acc.Balance >= 0 ? "var(--positive)" : "var(--negative)");">
+                                @(acc.Balance >= 0 ? "Healthy" : "Overdrawn")
+                            </span>
+                        </td>
+                    </tr>
+                }
+                @if (!Model.Any())
+                {
+                    <tr>
+                        <td colspan="4" style="text-align:center;padding:32px 0;color:var(--text-secondary);font-size:13px;">No accounts to display yet.</td>
+                    </tr>
+                }
             </tbody>
         </table>
     </div>
 
-    <aside class="stat-card quick-actions-card col-span-4">
+    @* Quick Actions *@
+    <aside class="stat-card quick-actions-card">
         <header class="text-section quick-actions-title">Quick Actions</header>
-
         <div class="quick-actions-list">
-            <a href="#" class="quick-action-item">
-                <span>Add Transaction</span>
-                <span aria-hidden="true">&rarr;</span>
+            <a asp-controller="Transactions" asp-action="Create" class="quick-action-item">
+                <span>Add Transaction</span><span aria-hidden="true">&rarr;</span>
             </a>
-            <a href="#" class="quick-action-item">
-                <span>Import Statements</span>
-                <span aria-hidden="true">&rarr;</span>
+            <a asp-action="Create" class="quick-action-item">
+                <span>Add Account</span><span aria-hidden="true">&rarr;</span>
             </a>
-            <a href="#" class="quick-action-item">
-                <span>Run Balance Report</span>
-                <span aria-hidden="true">&rarr;</span>
+            <a asp-controller="Transactions" asp-action="Index" class="quick-action-item">
+                <span>View Transactions</span><span aria-hidden="true">&rarr;</span>
             </a>
-            <a href="#" class="quick-action-item">
-                <span>Review Recurring Charges</span>
-                <span aria-hidden="true">&rarr;</span>
+            <a asp-controller="Categories" asp-action="Index" class="quick-action-item">
+                <span>Manage Categories</span><span aria-hidden="true">&rarr;</span>
             </a>
         </div>
-
         <div class="quick-actions-sync card">
-            <div class="text-label">Next sync window</div>
-            <p class="quick-sync-time">Mar 25, 2026 &bull; 6:03 AM</p>
-            <p class="text-caption">Linked institutions refresh in background every 4 hours.</p>
+            <div class="text-label" style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);">Account Summary</div>
+            <p class="quick-sync-time">@Model.Count() Active · @Model.Count(a => a.Balance < 0) Overdrawn</p>
+            <p class="text-caption" style="color:var(--text-secondary);font-size:12px;">Balances update when you add or edit transactions.</p>
         </div>
     </aside>
 </div>
 
-<!-- Link Bank Account Modal -->
+@* ══════════ LINK BANK ACCOUNT MODAL ══════════ *@
 <div class="payment-background" id="link-account-backdrop"></div>
-
 <div id="paymentprompt" class="card link-bank-modal" role="dialog" aria-modal="true" aria-labelledby="link-account-title">
     <div class="link-bank-modal__header">
         <div>
-            <p class="text-label">Secure Connection</p>
+            <p class="text-label" style="font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--text-secondary);">Secure Connection</p>
             <h2 id="link-account-title" class="text-section">Link Bank Account</h2>
         </div>
-        <button type="button" id="payment-close-btn" class="close-btn" aria-label="Close link account form">&times;</button>
+        <button type="button" id="payment-close-btn" class="close-btn" aria-label="Close">&times;</button>
     </div>
-
-    <p class="link-bank-subtitle">
-        Connect an account to keep balances, activity, and account health in sync with your new Accounts Overview.
-    </p>
-
-    <div class="link-provider-row" aria-label="Supported providers" role="group">
+    <p class="link-bank-subtitle">Connect an account to keep balances, activity, and account health in sync with your Accounts Overview.</p>
+    <div class="link-provider-row" role="group" aria-label="Supported providers">
         <button type="button" class="provider-tab active" data-provider="plaid">Plaid</button>
         <button type="button" class="provider-tab" data-provider="finicity">Finicity</button>
         <button type="button" class="provider-tab" data-provider="mx">MX</button>
         <button type="button" class="provider-tab" data-provider="manual">Manual Sync</button>
     </div>
-
-    <div class="link-provider-copy" id="link-provider-copy" aria-live="polite">
-        A secure redirect opens in a new window for sign in.
-    </div>
-
-    <form id="formcard" class="link-bank-form" method="POST" action="#">
+    <div class="link-provider-copy" id="link-provider-copy" aria-live="polite">A secure redirect opens in a new window for sign in.</div>
+    <form id="formcard" class="link-bank-form" method="POST" action="@Url.Action("Create", "Accounts")">
+        @Html.AntiForgeryToken()
         <input type="hidden" id="link-provider-input" name="provider" value="plaid" />
-
         <div class="link-form-layout">
             <fieldset class="link-bank-fieldset">
                 <legend class="sr-only">Account Details</legend>
                 <div class="link-bank-grid">
                     <div class="field-group field-group--wide">
                         <label class="form-label" for="institution-name">Institution Name</label>
-                        <input type="text" id="institution-name" class="form-input" name="institution"
-                               placeholder="e.g. Chase Bank" autocomplete="organization" required />
+                        <input type="text" id="institution-name" class="form-input" name="Institution" placeholder="e.g. Chase Bank" autocomplete="organization" />
                     </div>
-
                     <div class="field-group">
-                        <label class="form-label" for="account-type">Account Type</label>
-                        <select id="account-type" class="form-input" name="accountType" required>
+                        <label class="form-label" for="account-modal-type">Account Type</label>
+                        <select id="account-modal-type" class="form-input" name="Type" required>
                             <option value="" disabled selected>Select account type</option>
-                            <option value="checking">Checking</option>
-                            <option value="savings">Savings</option>
-                            <option value="credit">Credit Card</option>
-                            <option value="investment">Investment</option>
-                            <option value="crypto">Crypto Wallet</option>
-                            <option value="cash">Cash / Other</option>
+                            <option value="0">Checking</option>
+                            <option value="1">Savings</option>
+                            <option value="2">Credit Card</option>
+                            <option value="3">Investment</option>
+                            <option value="4">Loan</option>
+                            <option value="5">Cash</option>
+                            <option value="6">Other</option>
                         </select>
                     </div>
-
                     <div class="field-group">
-                        <label class="form-label" for="account-nickname">Account Nickname</label>
-                        <input type="text" id="account-nickname" class="form-input" name="nickname"
-                               placeholder="Daily Spending" autocomplete="off" />
+                        <label class="form-label" for="account-modal-name">Account Nickname</label>
+                        <input type="text" id="account-modal-name" class="form-input" name="Name" placeholder="Daily Spending" required />
                     </div>
-
                     <div class="field-group">
                         <label class="form-label" for="account-last4">Last 4 Digits</label>
-                        <input type="text" id="account-last4" class="form-input" name="last4"
-                               placeholder="1234" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" required />
+                        <input type="text" id="account-last4" class="form-input" name="AccountNumber" placeholder="1234" inputmode="numeric" pattern="[0-9]{4}" maxlength="4" />
                     </div>
-
                     <div class="field-group">
                         <label class="form-label" for="opening-balance">Opening Balance</label>
-                        <input type="number" id="opening-balance" class="form-input" name="openingBalance"
-                               placeholder="0.00" step="0.01" min="0" required />
+                        <input type="number" id="opening-balance" class="form-input" name="Balance" placeholder="0.00" step="0.01" value="0" required />
                     </div>
-
                     <div class="field-group">
                         <label class="form-label" for="currency-select">Currency</label>
-                        <select id="currency-select" class="form-input" name="currency" required>
+                        <select id="currency-select" class="form-input" name="Currency">
                             <option value="EGP" selected>EGP</option>
+                            <option value="USD">USD</option>
                             <option value="EUR">EUR</option>
                             <option value="GBP">GBP</option>
-                            <option value="CAD">CAD</option>
                         </select>
-                    </div>
-
-                    <div class="field-group dynamic-field" data-account-types="checking savings" hidden>
-                        <label class="form-label" for="routing-number">Routing Number</label>
-                        <input type="text" id="routing-number" class="form-input" name="routingNumber"
-                               placeholder="9-digit routing number" inputmode="numeric" pattern="[0-9]{9}" maxlength="9" disabled />
-                    </div>
-
-                    <div class="field-group dynamic-field" data-account-types="credit" hidden>
-                        <label class="form-label" for="credit-limit">Credit Limit</label>
-                        <input type="number" id="credit-limit" class="form-input" name="creditLimit"
-                               placeholder="0.00" min="0" step="0.01" disabled />
-                    </div>
-
-                    <div class="field-group field-group--wide dynamic-field" data-account-types="investment crypto" hidden>
-                        <label class="form-label" for="portfolio-source">Portfolio Source</label>
-                        <input type="text" id="portfolio-source" class="form-input" name="portfolioSource"
-                               placeholder="Broker, wallet provider, or exchange" disabled />
                     </div>
                 </div>
             </fieldset>
-
             <aside class="link-preview-card" aria-label="Live account preview">
-                <p class="text-label">Preview</p>
+                <p class="text-label" style="font-size:11px;text-transform:uppercase;color:var(--text-secondary);">Preview</p>
                 <h3 class="link-preview-title" id="preview-name">New Institution</h3>
                 <p class="link-preview-type" id="preview-type">Select account type</p>
-
                 <div class="link-preview-row">
                     <span class="text-caption">Ending</span>
                     <strong id="preview-last4">••••</strong>
                 </div>
-
                 <div class="link-preview-row">
                     <span class="text-caption">Starting Balance</span>
-                    <strong id="preview-balance">E£0.00</strong>
+                    <strong id="preview-balance">EGP 0.00</strong>
                 </div>
-
                 <div class="link-preview-row">
                     <span class="text-caption">Provider</span>
                     <strong id="preview-provider">Plaid</strong>
                 </div>
             </aside>
         </div>
-
         <label class="link-consent-row" for="sync-consent">
             <input type="checkbox" id="sync-consent" required />
             <span>I authorize read-only sync for balances and transactions.</span>
         </label>
-
         <div class="link-bank-actions">
             <button type="button" id="payment-cancel-btn" class="btn btn-secondary">Cancel</button>
             <button type="submit" id="paybtn" class="btn btn-primary">Link Account</button>
@@ -280,11 +372,74 @@
 </div>
 
 @section Scripts {
-    <script>
-        window.ACTIVE_PAGE = "accounts";
-        window.USER_NAME = "@(User.Identity?.Name ?? "User")";
-    </script>
-    <script src="~/js/utils.js" asp-append-version="true"></script>
-    <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.min.js"></script>
-    <script src="~/js/accounts-overview.js" asp-append-version="true"></script>
+<script>
+(function(){
+    // ── Modal open/close ──
+    const backdrop   = document.getElementById('link-account-backdrop');
+    const modal      = document.getElementById('paymentprompt');
+    const openBtn    = document.getElementById('payment-toggle-btn');
+    const closeBtn   = document.getElementById('payment-close-btn');
+    const cancelBtn  = document.getElementById('payment-cancel-btn');
+
+    function openModal()  { modal.style.display = 'block'; backdrop.style.display = 'block'; document.body.style.overflow = 'hidden'; }
+    function closeModal() { modal.style.display = 'none';  backdrop.style.display = 'none';  document.body.style.overflow = ''; }
+
+    if (openBtn)  openBtn.addEventListener('click', openModal);
+    if (closeBtn) closeBtn.addEventListener('click', closeModal);
+    if (cancelBtn)cancelBtn.addEventListener('click', closeModal);
+    if (backdrop) backdrop.addEventListener('click', closeModal);
+
+    // ── Provider tabs ──
+    const providerCopy = { plaid: 'A secure redirect opens in a new window for sign in.', finicity: 'Finicity opens a secure OAuth flow to connect your accounts.', mx: 'MX uses bank-grade encryption to link your account.', manual: 'Enter your account details manually without connecting to a bank.' };
+    document.querySelectorAll('.provider-tab').forEach(btn => {
+        btn.addEventListener('click', function() {
+            document.querySelectorAll('.provider-tab').forEach(b => b.classList.remove('active'));
+            this.classList.add('active');
+            const p = this.dataset.provider;
+            document.getElementById('link-provider-input').value = p;
+            document.getElementById('link-provider-copy').textContent = providerCopy[p] || '';
+            document.getElementById('preview-provider').textContent = this.textContent;
+        });
+    });
+
+    // ── Live preview ──
+    const nameInput    = document.getElementById('institution-name');
+    const typeSelect   = document.getElementById('account-modal-type');
+    const last4Input   = document.getElementById('account-last4');
+    const balanceInput = document.getElementById('opening-balance');
+    const typeLabels   = ['Checking','Savings','Credit Card','Investment','Crypto Wallet','Cash / Other'];
+
+    function updatePreview() {
+        const n = nameInput?.value.trim() || 'New Institution';
+        const t = typeSelect?.value !== '' ? typeLabels[parseInt(typeSelect.value)] || 'Select account type' : 'Select account type';
+        const l = last4Input?.value.trim() || '••••';
+        const b = parseFloat(balanceInput?.value) || 0;
+        document.getElementById('preview-name').textContent    = n;
+        document.getElementById('preview-type').textContent    = t;
+        document.getElementById('preview-last4').textContent   = l;
+        document.getElementById('preview-balance').textContent = 'EGP ' + b.toFixed(2);
+    }
+    [nameInput, typeSelect, last4Input, balanceInput].forEach(el => { if(el) el.addEventListener('input', updatePreview); });
+
+    // ── Account type tab filtering ──
+    document.querySelectorAll('.visual-tab-button').forEach(lbl => {
+        lbl.addEventListener('click', function() {
+            const filter = this.dataset.filter || 'all';
+            const cards = document.querySelectorAll('.account-flip-card');
+            let visible = 0;
+            cards.forEach(card => {
+                const show = filter === 'all' || card.dataset.type === filter;
+                card.style.display = show ? '' : 'none';
+                if (show) visible++;
+            });
+            const empty = document.getElementById('accounts-flip-empty');
+            if (empty) empty.style.display = visible === 0 ? '' : 'none';
+        });
+    });
+
+    // ── Auto-dismiss toast ──
+    const toast = document.getElementById('acc-toast');
+    if (toast) setTimeout(() => toast.style.opacity = '0', 4000);
+})();
+</script>
 }

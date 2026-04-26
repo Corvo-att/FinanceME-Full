@@ -43,7 +43,7 @@
             <span class="sidebar__link-text">Accounts</span>
         </a>
 
-        <a href="#" class="sidebar__link" data-page="transactions" title="Transactions">
+        <a asp-controller="Transactions" asp-action="Index" class="sidebar__link" data-page="transactions" title="Transactions">
             <svg class="sidebar__link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path>
@@ -51,13 +51,21 @@
             <span class="sidebar__link-text">Transactions</span>
         </a>
 
-        <a href="#" class="sidebar__link" data-page="budgets" title="Budgets">
+        <a asp-controller="Budgets" asp-action="Index" class="sidebar__link" data-page="budgets" title="Budgets">
             <svg class="sidebar__link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
                  stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
                 <path d="M21.21 15.89A10 10 0 1 1 8 2.83"></path>
                 <path d="M22 12A10 10 0 0 0 12 2v10z"></path>
             </svg>
             <span class="sidebar__link-text">Budgets</span>
+        </a>
+
+        <a asp-controller="Categories" asp-action="Index" class="sidebar__link" data-page="categories" title="Categories">
+            <svg class="sidebar__link-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                 stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 2 2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"></path>
+            </svg>
+            <span class="sidebar__link-text">Categories</span>
         </a>
 
         <a href="#" class="sidebar__link" data-page="goals" title="Goals">
