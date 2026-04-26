@@ -3,11 +3,11 @@ namespace FinanceME.Enums
     public enum DebtType
     {
         CreditCard,
-        PersonalLoan,
         StudentLoan,
-        AutoLoan,
         Mortgage,
-        Medical,
+        AutoLoan,
+        PersonalLoan,
+        MedicalDebt,
         Other
     }
 }

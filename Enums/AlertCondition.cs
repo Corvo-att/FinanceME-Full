@@ -2,9 +2,9 @@ namespace FinanceME.Enums
 {
     public enum AlertCondition
     {
-        BalanceBelowThreshold,
-        BalanceAboveThreshold,
-        SpendingLimitExceeded,
-        UnusualHabitDetected
+        LowBalance,
+        LargeTransaction,
+        BudgetNearLimit,
+        GoalMilestone
     }
 }

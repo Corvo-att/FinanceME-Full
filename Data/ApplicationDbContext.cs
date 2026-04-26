@@ -11,19 +11,19 @@ namespace FinanceME.Data
         {
         }
 
-        public DbSet<Account>          Accounts          { get; set; } = null!;
-        public DbSet<Category>         Categories        { get; set; } = null!;
-        public DbSet<Transaction>      Transactions      { get; set; } = null!;
-        public DbSet<Budget>           Budgets           { get; set; } = null!;
-        public DbSet<Goal>             Goals             { get; set; } = null!;
-        public DbSet<GoalContribution> GoalContributions { get; set; } = null!;
-        public DbSet<Bill>             Bills             { get; set; } = null!;
-        public DbSet<Forecast>         Forecasts         { get; set; } = null!;
-        public DbSet<Debt>             Debts             { get; set; } = null!;
-        public DbSet<DebtPayment>      DebtPayments      { get; set; } = null!;
-        public DbSet<Subscription>     Subscriptions     { get; set; } = null!;
-        public DbSet<Notification>     Notifications     { get; set; } = null!;
-        public DbSet<AlertRule>        AlertRules        { get; set; } = null!;
+        public DbSet<Account>          Accounts          { get; set; } 
+        public DbSet<Category>         Categories        { get; set; } 
+        public DbSet<Transaction>      Transactions      { get; set; } 
+        public DbSet<Budget>           Budgets           { get; set; } 
+        public DbSet<Goal>             Goals             { get; set; } 
+        public DbSet<GoalContribution> GoalContributions { get; set; } 
+        public DbSet<Bill>             Bills             { get; set; } 
+        public DbSet<Forecast>         Forecasts         { get; set; } 
+        public DbSet<Debt>             Debts             { get; set; } 
+        public DbSet<DebtPayment>      DebtPayments      { get; set; } 
+        public DbSet<Subscription>     Subscriptions     { get; set; } 
+        public DbSet<Notification>     Notifications     { get; set; } 
+        public DbSet<AlertRule>        AlertRules        { get; set; } 
 
         protected override void OnModelCreating(ModelBuilder builder)
         {

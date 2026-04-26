@@ -1,0 +1,81 @@
+@model FinanceME.Models.Entities.Account
+@using FinanceME.Enums
+
+@{
+    ViewData["Title"] = "Add Account";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/transactions.css" asp-append-version="true" />
+    <script src="https://kit.fontawesome.com/b9a020078f.js" crossorigin="anonymous"></script>
+}
+
+<div class="form-container">
+    <header class="transactions-header page-banner">
+        <div class="page-banner-content">
+            <h1 class="text-display" style="font-size: 28px; font-family: var(--font-ui)">Add Account</h1>
+        </div>
+        <div class="page-banner-actions">
+            <a asp-action="Index" class="btn btn-ghost" style="display: inline-flex; align-items: center">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
+                Back
+            </a>
+        </div>
+    </header>
+
+    <div class="card" style="margin: 40px auto; max-width: 600px; padding: var(--space-xl)">
+        <form asp-action="Create">
+            <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Name" class="form-label">Account Name</label>
+                <input asp-for="Name" class="form-input" placeholder="e.g. Chase Checking" />
+                <span asp-validation-for="Name" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Type" class="form-label">Account Type</label>
+                <select asp-for="Type" class="form-input" asp-items="Html.GetEnumSelectList<AccountType>()"></select>
+                <span asp-validation-for="Type" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Balance" class="form-label">Starting Balance</label>
+                <input asp-for="Balance" class="form-input" type="number" step="0.01" />
+                <span asp-validation-for="Balance" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Institution" class="form-label">Institution (Optional)</label>
+                <input asp-for="Institution" class="form-input" placeholder="e.g. JP Morgan Chase" />
+                <span asp-validation-for="Institution" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="AccountNumber" class="form-label">Account Number (Last 4 Digits)</label>
+                <input asp-for="AccountNumber" class="form-input" placeholder="1234" maxlength="20" />
+                <span asp-validation-for="AccountNumber" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Currency" class="form-label">Currency</label>
+                <input asp-for="Currency" class="form-input" value="EGP" />
+                <span asp-validation-for="Currency" class="text-danger"></span>
+            </div>
+
+            <div class="form-group mb-3">
+                <label asp-for="Color" class="form-label">Color Code</label>
+                <input asp-for="Color" class="form-input" type="color" style="height: 40px;" />
+                <span asp-validation-for="Color" class="text-danger"></span>
+            </div>
+
+            <div class="mt-4" style="margin-top: var(--space-xl)">
+                <input type="submit" value="Add Account" class="btn btn-primary" style="width: 100%" />
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+}
