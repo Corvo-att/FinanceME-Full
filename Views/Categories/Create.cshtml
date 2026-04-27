@@ -5,55 +5,72 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/transactions.css" asp-append-version="true" />
-    <script src="https://kit.fontawesome.com/b9a020078f.js" crossorigin="anonymous"></script>
+    <style>
+        .tx-form-container { max-width: 600px; margin: 40px auto; }
+        .tx-card {
+            background: var(--bg-surface); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg); padding: 32px;
+        }
+        .form-label {
+            font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
+            color: var(--text-secondary); font-weight: 600; margin-bottom: 8px; display: block;
+        }
+        .form-input {
+            width: 100%; height: 44px; padding: 0 16px;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle);
+            border-radius: 6px; color: var(--text-primary); font-size: 14px;
+            font-family: var(--font-ui); transition: border-color 0.2s ease;
+        }
+        .form-input:focus { border-color: var(--accent-blue); outline: none; }
+        .form-input::placeholder { color: var(--text-muted); }
+        select.form-input { appearance: none; background-image: url('data:image/svg+xml;utf8,<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="gray" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'); background-repeat: no-repeat; background-position: right 16px center; }
+        select.form-input option { background-color: var(--bg-surface); color: var(--text-primary); }
+    </style>
 }
 
-<div class="form-container">
-    <header class="transactions-header page-banner">
-        <div class="page-banner-content">
-            <h1 class="text-display" style="font-size: 28px; font-family: var(--font-ui)">Add Category</h1>
-        </div>
-        <div class="page-banner-actions">
-            <a asp-action="Index" class="btn btn-ghost" style="display: inline-flex; align-items: center">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-                Back
-            </a>
-        </div>
-    </header>
+<div class="tx-form-container">
+    <div style="margin-bottom: 24px;">
+        <h1 style="font-size: 24px; font-weight: 600; margin: 0 0 8px;">Add Category</h1>
+        <p style="color: var(--text-secondary); margin: 0; font-size: 14px;">Create a custom category for classifying your transactions.</p>
+    </div>
 
-    <div class="card" style="margin: 40px auto; max-width: 600px; padding: var(--space-xl)">
+    <div class="tx-card">
         <form asp-action="Create">
             <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-            <div class="form-group mb-3">
-                <label asp-for="Name" class="form-label">Category Name</label>
+            <div class="form-group mb-4" style="margin-bottom: 24px;">
+                <label asp-for="Name" class="form-label">CATEGORY NAME</label>
                 <input asp-for="Name" class="form-input" placeholder="e.g. Groceries" />
                 <span asp-validation-for="Name" class="text-danger"></span>
             </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="Icon" class="form-label">Icon (optional)</label>
-                <input asp-for="Icon" class="form-input" placeholder="e.g. string or emoji" />
-                <span asp-validation-for="Icon" class="text-danger"></span>
+            <div style="display: flex; gap: 24px; margin-bottom: 24px;">
+                <div class="form-group" style="flex: 1;">
+                    <label asp-for="Icon" class="form-label">ICON (OPTIONAL)</label>
+                    <input asp-for="Icon" class="form-input" placeholder="e.g. 🛒" />
+                    <span asp-validation-for="Icon" class="text-danger"></span>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label asp-for="Color" class="form-label">COLOR</label>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <input asp-for="Color" type="color" style="height: 44px; width: 60px; padding: 4px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); border-radius: 6px; cursor: pointer;" />
+                        <span style="color: var(--text-secondary); font-size: 13px;">Pick an accent color</span>
+                    </div>
+                    <span asp-validation-for="Color" class="text-danger"></span>
+                </div>
             </div>
 
-            <div class="form-group mb-3">
-                <label asp-for="Color" class="form-label">Color (optional hex code)</label>
-                <input asp-for="Color" class="form-input" type="color" style="height: 40px;" />
-                <span asp-validation-for="Color" class="text-danger"></span>
-            </div>
-
-            <div class="form-group mb-3">
-                <label asp-for="ParentCategoryId" class="form-label">Parent Category (Optional)</label>
+            <div class="form-group mb-4" style="margin-bottom: 24px;">
+                <label asp-for="ParentCategoryId" class="form-label">PARENT CATEGORY (OPTIONAL)</label>
                 <select asp-for="ParentCategoryId" class="form-input" asp-items="ViewBag.ParentCategoryId">
                     <option value="">-- None (Top Level) --</option>
                 </select>
                 <span asp-validation-for="ParentCategoryId" class="text-danger"></span>
             </div>
 
-            <div class="mt-4" style="margin-top: var(--space-xl)">
-                <input type="submit" value="Add Category" class="btn btn-primary" style="width: 100%" />
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 24px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-subtle);">
+                <a asp-action="Index" style="color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500;">Cancel</a>
+                <button type="submit" class="btn" style="background-color: var(--accent-gold); color: #000; font-weight: 600; padding: 10px 24px; border-radius: 6px; border: none; cursor: pointer;">Add Category</button>
             </div>
         </form>
     </div>

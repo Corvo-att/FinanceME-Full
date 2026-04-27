@@ -6,87 +6,168 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/transactions.css" asp-append-version="true" />
-    <script src="https://kit.fontawesome.com/b9a020078f.js" crossorigin="anonymous"></script>
+    <style>
+        .tx-form-container { max-width: 600px; margin: 40px auto; }
+        .type-tabs {
+            display: flex; background: rgba(255,255,255,0.02);
+            border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
+            margin-bottom: var(--space-xl); overflow: hidden; padding: 4px; gap: 4px;
+        }
+        .type-tab {
+            flex: 1; text-align: center; margin: 0; cursor: pointer;
+            padding: 12px 0; color: var(--text-secondary); font-weight: 500; font-size: 14px;
+            border-bottom: 2px solid transparent; transition: all 0.2s ease; border-radius: 6px;
+        }
+        .type-tab input { display: none; }
+        .type-tab.active-Expense { border-bottom-color: var(--negative); color: var(--negative); background: rgba(224,92,92,0.05); }
+        .type-tab.active-Income { border-bottom-color: var(--positive); color: var(--positive); background: rgba(46,204,138,0.05); }
+        .type-tab.active-Transfer { border-bottom-color: var(--accent-blue); color: var(--accent-blue); background: rgba(76,142,245,0.05); }
+
+        .tx-card {
+            background: var(--bg-surface); border: 1px solid var(--border-subtle);
+            border-radius: var(--radius-lg); padding: 32px;
+        }
+        .form-label {
+            font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase;
+            color: var(--text-secondary); font-weight: 600; margin-bottom: 8px; display: block;
+        }
+        .form-input {
+            width: 100%; height: 44px; padding: 0 16px;
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle);
+            border-radius: 6px; color: var(--text-primary); font-size: 14px;
+            font-family: var(--font-ui); transition: border-color 0.2s ease;
+        }
+        .form-input:focus { border-color: var(--accent-blue); outline: none; }
+        .form-input::placeholder { color: var(--text-muted); }
+        select.form-input { appearance: none; background-image: url('data:image/svg+xml;utf8,<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="gray" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>'); background-repeat: no-repeat; background-position: right 16px center; }
+        select.form-input option { background-color: var(--bg-surface); color: var(--text-primary); }
+        
+        .amount-input-wrapper { position: relative; }
+        .amount-input-wrapper span { position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: var(--text-secondary); font-size: 18px; }
+        .amount-input-wrapper input { padding-left: 36px; font-size: 18px; font-family: var(--font-mono); height: 50px; }
+    </style>
 }
 
-<header class="transactions-header page-banner">
-    <div class="page-banner-content">
-        <h1 class="text-display" style="font-size: 28px; font-family: var(--font-ui)">Edit Transaction</h1>
-    </div>
-    <div class="page-banner-actions">
-        <a asp-action="Index" class="btn btn-ghost" style="display: inline-flex; align-items: center">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            Back
-        </a>
-    </div>
-</header>
-
-<div class="card" style="margin: 40px auto; max-width: 600px; padding: var(--space-xl)">
+<div class="tx-form-container">
     <form asp-action="Edit">
         <input type="hidden" asp-for="Id" />
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-        <div class="form-group mb-3">
-            <label asp-for="AccountId" class="form-label">Account</label>
-            <select asp-for="AccountId" class="form-input" asp-items="ViewBag.AccountId">
-                <option value="" disabled>Select Account</option>
-            </select>
-            <span asp-validation-for="AccountId" class="text-danger"></span>
+        <div class="type-tabs">
+            <label class="type-tab" data-type="Expense">
+                <input type="radio" asp-for="Type" value="Expense" />
+                Expense
+            </label>
+            <label class="type-tab" data-type="Income">
+                <input type="radio" asp-for="Type" value="Income" />
+                Income
+            </label>
+            <label class="type-tab" data-type="Transfer">
+                <input type="radio" asp-for="Type" value="Transfer" />
+                Transfer
+            </label>
         </div>
 
-        <div class="form-group mb-3">
-            <label asp-for="Type" class="form-label">Transaction Type</label>
-            <select asp-for="Type" class="form-input" asp-items="Html.GetEnumSelectList<TransactionType>()"></select>
-            <span asp-validation-for="Type" class="text-danger"></span>
-        </div>
+        <div class="tx-card">
+            <div class="form-group mb-4" style="margin-bottom: 24px;">
+                <label asp-for="Amount" class="form-label">AMOUNT</label>
+                <div class="amount-input-wrapper">
+                    <span>$</span>
+                    <input asp-for="Amount" class="form-input" type="number" step="0.01" placeholder="0.00" />
+                </div>
+                <span asp-validation-for="Amount" class="text-danger"></span>
+            </div>
 
-        <div class="form-group mb-3">
-            <label asp-for="Amount" class="form-label">Amount</label>
-            <input asp-for="Amount" class="form-input" type="number" step="0.01" />
-            <span asp-validation-for="Amount" class="text-danger"></span>
-        </div>
+            <div class="form-group mb-4" style="margin-bottom: 24px;">
+                <label asp-for="Description" class="form-label">DESCRIPTION / MERCHANT</label>
+                <input asp-for="Description" class="form-input" placeholder="e.g. Whole Foods Market" />
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
 
-        <div class="form-group mb-3">
-            <label asp-for="Description" class="form-label">Description / Merchant</label>
-            <input asp-for="Description" class="form-input" />
-            <span asp-validation-for="Description" class="text-danger"></span>
-        </div>
+            <div style="display: flex; gap: 24px; margin-bottom: 24px;">
+                <div class="form-group" style="flex: 1;">
+                    <label asp-for="AccountId" class="form-label">ACCOUNT</label>
+                    <select asp-for="AccountId" class="form-input" asp-items="ViewBag.AccountId">
+                        <option value="" disabled selected>Select Account</option>
+                    </select>
+                    <span asp-validation-for="AccountId" class="text-danger"></span>
+                </div>
+                <div class="form-group" style="flex: 1;">
+                    <label asp-for="Date" class="form-label">DATE</label>
+                    <input asp-for="Date" class="form-input" type="date" />
+                    <span asp-validation-for="Date" class="text-danger"></span>
+                </div>
+            </div>
 
-        <div class="form-group mb-3">
-            <label asp-for="Date" class="form-label">Date</label>
-            <input asp-for="Date" class="form-input" type="date" />
-            <span asp-validation-for="Date" class="text-danger"></span>
-        </div>
+            <div class="form-group mb-4" id="category-group" style="margin-bottom: 24px;">
+                <label asp-for="CategoryId" class="form-label">CATEGORY</label>
+                <select asp-for="CategoryId" class="form-input" asp-items="ViewBag.CategoryId">
+                    <option value="">Select Category</option>
+                </select>
+                <span asp-validation-for="CategoryId" class="text-danger"></span>
+            </div>
 
-        <div class="form-group mb-3">
-            <label asp-for="CategoryId" class="form-label">Category (Optional)</label>
-            <select asp-for="CategoryId" class="form-input" asp-items="ViewBag.CategoryId">
-                <option value="">-- Select Category --</option>
-            </select>
-            <span asp-validation-for="CategoryId" class="text-danger"></span>
-        </div>
+            <div class="form-group mb-4" id="transfer-group" style="display: none; margin-bottom: 24px;">
+                <label asp-for="TransferToAccountId" class="form-label">TRANSFER TO</label>
+                <select asp-for="TransferToAccountId" class="form-input" asp-items="ViewBag.TransferToAccountId">
+                    <option value="">Select Account</option>
+                </select>
+                <span asp-validation-for="TransferToAccountId" class="text-danger"></span>
+            </div>
 
-        <div class="form-group mb-3">
-            <label asp-for="TransferToAccountId" class="form-label">Transfer To (For Transfers Only)</label>
-            <select asp-for="TransferToAccountId" class="form-input" asp-items="ViewBag.TransferToAccountId">
-                <option value="">-- Select Account --</option>
-            </select>
-            <span asp-validation-for="TransferToAccountId" class="text-danger"></span>
-        </div>
+            <div class="form-group mb-4">
+                <label asp-for="Notes" class="form-label">NOTES (OPTIONAL)</label>
+                <textarea asp-for="Notes" class="form-input" placeholder="Add any details about this transaction..." style="height: 100px; resize: none; padding-top: 12px;"></textarea>
+                <span asp-validation-for="Notes" class="text-danger"></span>
+            </div>
 
-        <div class="form-group mb-3">
-            <label asp-for="Notes" class="form-label">Notes (Optional)</label>
-            <textarea asp-for="Notes" class="form-input"></textarea>
-            <span asp-validation-for="Notes" class="text-danger"></span>
-        </div>
-
-        <div class="mt-4" style="margin-top: var(--space-xl)">
-            <input type="submit" value="Save Changes" class="btn btn-primary" style="width: 100%" />
+            <div style="display: flex; justify-content: flex-end; align-items: center; gap: 24px; margin-top: 32px; padding-top: 24px; border-top: 1px solid var(--border-subtle);">
+                <a asp-action="Index" style="color: var(--text-secondary); text-decoration: none; font-size: 14px; font-weight: 500;">Cancel</a>
+                <button type="submit" class="btn" style="background-color: var(--accent-gold); color: #000; font-weight: 600; padding: 10px 24px; border-radius: 6px; border: none; cursor: pointer;">Save Changes</button>
+            </div>
         </div>
     </form>
 </div>
 
 @section Scripts {
     @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabs = document.querySelectorAll('.type-tab');
+            const transferGroup = document.getElementById('transfer-group');
+            const categoryGroup = document.getElementById('category-group');
+
+            function updateTabs(selectedType) {
+                tabs.forEach(tab => {
+                    const type = tab.dataset.type;
+                    tab.classList.remove('active-Expense', 'active-Income', 'active-Transfer');
+                    if (type === selectedType) {
+                        tab.classList.add('active-' + type);
+                    }
+                });
+
+                if (selectedType === 'Transfer') {
+                    if (transferGroup) transferGroup.style.display = 'block';
+                    if (categoryGroup) categoryGroup.style.display = 'none';
+                } else {
+                    if (transferGroup) transferGroup.style.display = 'none';
+                    if (categoryGroup) categoryGroup.style.display = 'block';
+                }
+            }
+
+            tabs.forEach(tab => {
+                tab.addEventListener('click', () => {
+                    const radio = tab.querySelector('input[type="radio"]');
+                    radio.checked = true;
+                    updateTabs(tab.dataset.type);
+                });
+            });
+
+            // Init
+            let initialChecked = document.querySelector('.type-tab input[type="radio"]:checked');
+            if (initialChecked) {
+                updateTabs(initialChecked.value);
+            }
+        });
+    </script>
 }

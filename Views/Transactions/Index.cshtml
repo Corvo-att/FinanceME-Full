@@ -15,12 +15,12 @@
         .transactions-header {
             display: flex;
             justify-content: space-between;
-            align-items: flex-end;
+            align-items: center;
             gap: var(--space-lg);
             flex-wrap: wrap;
-            padding: var(--space-lg) var(--space-xl);
-            margin-bottom: var(--space-xl);
-            background: linear-gradient(120deg, rgba(255,255,255,0.01) 22%, rgba(201,168,76,0.07) 53%, rgba(255,255,255,0.01) 84%), var(--bg-surface);
+            padding: var(--space-xl);
+            margin-bottom: var(--space-md);
+            background: var(--bg-surface);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-lg);
         }
@@ -41,32 +41,24 @@
             align-items: flex-end;
         }
         .filter-bar .input-group { display: flex; flex-direction: column; gap: var(--space-xs); }
-        .filter-bar .input-group label { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-secondary); font-family: var(--font-ui); }
+        .filter-bar .input-group label { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-secondary); font-family: var(--font-ui); font-weight: 600; margin-bottom: 4px; }
         .filter-bar .input-group input,
         .filter-bar .input-group select {
             padding: 0 12px; height: 36px;
-            background: var(--bg-base); border: 1px solid var(--border-strong);
+            background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle);
             color: var(--text-primary); border-radius: 6px;
-            font-family: var(--font-ui); font-size: 14px; min-width: 160px;
+            font-family: var(--font-ui); font-size: 13px; min-width: 180px;
         }
         .filter-bar .input-group input:focus,
-        .filter-bar .input-group select:focus { border-color: var(--accent-gold); outline: none; box-shadow: 0 0 0 2px rgba(201,168,76,0.15); }
+        .filter-bar .input-group select:focus { border-color: var(--text-secondary); outline: none; }
+        .filter-bar .input-group select option { background-color: var(--bg-surface); color: var(--text-primary); }
         .filter-bar-spacer { flex: 1; }
-        .filter-bar-actions { display: flex; gap: var(--space-sm); align-items: flex-end; }
+        .filter-bar-actions { display: flex; gap: var(--space-sm); align-items: flex-end; padding-bottom: 8px; }
 
-        /* ── Transactions Summary Bar ── */
-        .tx-summary-bar {
-            display: flex; gap: var(--space-md); margin-bottom: var(--space-md);
+        #filter-reset {
+            font-size: 13px; color: var(--text-secondary); text-decoration: none; cursor: pointer; background: transparent; border: none; padding: 0;
         }
-        .tx-summary-card {
-            flex: 1; background: var(--bg-surface); border: 1px solid var(--border-subtle);
-            border-radius: var(--radius-lg); padding: var(--space-md) var(--space-lg);
-            display: flex; flex-direction: column; gap: 4px;
-        }
-        .tx-summary-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-secondary); }
-        .tx-summary-value { font-family: var(--font-mono); font-size: 20px; font-weight: 600; color: var(--text-primary); }
-        .tx-summary-value.positive { color: var(--positive); }
-        .tx-summary-value.negative { color: var(--negative); }
+        #filter-reset:hover { color: var(--text-primary); }
 
         /* ── Transactions Table Card ── */
         .tx-table-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); overflow: hidden; }
@@ -93,6 +85,7 @@
         .data-table tbody tr:last-child { border-bottom: none; }
         .data-table td { padding: 14px var(--space-lg); vertical-align: middle; font-size: 14px; color: var(--text-primary); }
         .data-table .col-right { text-align: right; }
+        .data-table .col-center { text-align: center; }
 
         .tx-date { font-size: 12px; color: var(--text-secondary); white-space: nowrap; }
         .tx-desc { font-weight: 500; }
@@ -185,7 +178,7 @@
         <p class="tx-page-subtitle">View and manage all your historical spending and income.</p>
     </div>
     <div class="tx-header-actions">
-        <a asp-action="Create" class="btn btn-primary" style="display:inline-flex;align-items:center;gap:6px;">
+        <a asp-action="Create" class="btn" style="background-color: var(--accent-gold); color: #000; font-weight: 600; border: none; display:inline-flex;align-items:center;gap:6px; padding: 10px 16px; border-radius: 8px;">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
@@ -196,44 +189,15 @@
 </header>
 
 @* ══════════════════════════════════════════════════════════════
-   SUMMARY CARDS
-═══════════════════════════════════════════════════════════════ *@
-@{
-    var totalIncome = Model.Where(t => t.Type == TransactionType.Income).Sum(t => t.Amount);
-    var totalExpense = Model.Where(t => t.Type == TransactionType.Expense).Sum(t => t.Amount);
-    var netFlow = totalIncome - totalExpense;
-}
-<div class="tx-summary-bar">
-    <div class="tx-summary-card">
-        <div class="tx-summary-label">Total Income</div>
-        <div class="tx-summary-value positive">+@totalIncome.ToString("C")</div>
-    </div>
-    <div class="tx-summary-card">
-        <div class="tx-summary-label">Total Expenses</div>
-        <div class="tx-summary-value negative">-@totalExpense.ToString("C")</div>
-    </div>
-    <div class="tx-summary-card">
-        <div class="tx-summary-label">Net Flow</div>
-        <div class="tx-summary-value @(netFlow >= 0 ? "positive" : "negative")">
-            @(netFlow >= 0 ? "+" : "")@netFlow.ToString("C")
-        </div>
-    </div>
-    <div class="tx-summary-card">
-        <div class="tx-summary-label">Transactions</div>
-        <div class="tx-summary-value">@totalCount</div>
-    </div>
-</div>
-
-@* ══════════════════════════════════════════════════════════════
    FILTER BAR
 ═══════════════════════════════════════════════════════════════ *@
 <div class="filter-bar">
     <div class="input-group">
-        <label for="filter-search">Search</label>
-        <input type="text" id="filter-search" placeholder="Description, category..." />
+        <label for="filter-search">SEARCH</label>
+        <input type="text" id="filter-search" placeholder="Merchant, category..." />
     </div>
     <div class="input-group">
-        <label for="filter-account">Account</label>
+        <label for="filter-account">ACCOUNT</label>
         <select id="filter-account">
             <option value="">All Accounts</option>
             @foreach (var acc in accounts)
@@ -243,27 +207,17 @@
         </select>
     </div>
     <div class="input-group">
-        <label for="filter-type">Type</label>
-        <select id="filter-type">
-            <option value="">All Types</option>
-            <option value="Income">Income</option>
-            <option value="Expense">Expense</option>
-            <option value="Transfer">Transfer</option>
-        </select>
-    </div>
-    <div class="input-group">
-        <label for="filter-category">Category</label>
-        <select id="filter-category">
-            <option value="">All Categories</option>
-            @foreach (var cat in categories)
-            {
-                <option value="@cat!.Name">@cat.Name</option>
-            }
+        <label for="filter-date">DATE RANGE</label>
+        <select id="filter-date">
+            <option value="This Month">This Month</option>
+            <option value="Last Month">Last Month</option>
+            <option value="This Year">This Year</option>
+            <option value="All Time">All Time</option>
         </select>
     </div>
     <div class="filter-bar-spacer"></div>
     <div class="filter-bar-actions">
-        <button class="btn btn-ghost" id="filter-reset" style="height:36px;">Reset Filters</button>
+        <button id="filter-reset">Reset Filters</button>
     </div>
 </div>
 
@@ -271,23 +225,16 @@
    TRANSACTIONS TABLE
 ═══════════════════════════════════════════════════════════════ *@
 <div class="tx-table-card">
-    <div class="tx-table-header">
-        <span class="tx-table-title">All Transactions</span>
-        <span class="tx-count-badge" id="visible-count">@totalCount entries</span>
-    </div>
-
     @if (Model.Any())
     {
         <table class="data-table" id="tx-table">
             <thead>
                 <tr>
-                    <th>Date</th>
-                    <th>Description</th>
-                    <th>Account</th>
-                    <th>Category</th>
-                    <th>Type</th>
-                    <th class="col-right">Amount</th>
-                    <th class="col-right">Actions</th>
+                    <th>DATE</th>
+                    <th class="col-center">DESCRIPTION</th>
+                    <th class="col-center">ACCOUNT</th>
+                    <th class="col-center">CATEGORY</th>
+                    <th class="col-right">AMOUNT</th>
                 </tr>
             </thead>
             <tbody id="tx-tbody">
@@ -296,12 +243,9 @@
                     var amountClass = item.Type == TransactionType.Expense ? "amount-negative"
                                     : item.Type == TransactionType.Income  ? "amount-positive"
                                     : "amount-transfer";
-                    var amountSign  = item.Type == TransactionType.Expense ? "−"
+                    var amountSign  = item.Type == TransactionType.Expense ? "-"
                                     : item.Type == TransactionType.Income  ? "+"
-                                    : "↔";
-                    var typeBadge   = item.Type == TransactionType.Expense  ? "badge-expense"
-                                    : item.Type == TransactionType.Income   ? "badge-income"
-                                    : "badge-transfer";
+                                    : "";
                     var catColor    = item.Category?.Color ?? "var(--text-muted)";
                     var catName     = item.Category?.Name ?? "Uncategorized";
                     var accountName = item.Account?.Name ?? "—";
@@ -309,38 +253,32 @@
                     <tr class="tx-row"
                         data-desc="@item.Description.ToLower()"
                         data-account="@accountName"
-                        data-type="@item.Type.ToString()"
-                        data-category="@catName"
+                        data-date="@item.Date.ToString("yyyy-MM-dd")"
                         onclick="window.location.href='@Url.Action("Details", new { id = item.Id })'">
                         <td>
                             <div class="tx-date">@item.Date.ToString("MMM dd, yyyy")</div>
                         </td>
-                        <td>
+                        <td class="col-center">
                             <div class="tx-desc">@item.Description</div>
                             @if (!string.IsNullOrEmpty(item.Notes))
                             {
                                 <div class="tx-desc-notes">@item.Notes</div>
                             }
                         </td>
-                        <td>
+                        <td class="col-center">
                             <div class="tx-account">@accountName</div>
                         </td>
-                        <td>
-                            <span class="tx-category">
+                        <td class="col-center">
+                            <span class="tx-category" style="justify-content: center;">
                                 <span class="category-dot" style="background: @catColor;"></span>
                                 @catName
                             </span>
                         </td>
-                        <td>
-                            <span class="tx-type-badge @typeBadge">@item.Type</span>
-                        </td>
-                        <td class="col-right">
-                            <span class="tx-amount @amountClass">@amountSign @item.Amount.ToString("C")</span>
-                        </td>
-                        <td class="col-right" onclick="event.stopPropagation()">
-                            <div class="tx-actions">
-                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-ghost btn-sm">Edit</a>
-                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-ghost btn-sm" style="color:var(--negative)">Delete</a>
+                        <td class="col-right" style="position: relative;">
+                            <span class="tx-amount @amountClass" style="color: var(--text-primary); font-family: var(--font-ui); font-size: 13px; font-weight: 500;">@amountSign@item.Amount.ToString("C")</span>
+                            <div class="tx-actions" style="position: absolute; right: 10px; top: 50%; transform: translateY(-50%); background: var(--bg-surface); padding-left: 10px;">
+                                <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-ghost btn-sm" onclick="event.stopPropagation()">Edit</a>
+                                <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-ghost btn-sm" style="color:var(--negative)" onclick="event.stopPropagation()">Delete</a>
                             </div>
                         </td>
                     </tr>
@@ -390,14 +328,13 @@
 @section Scripts {
 <script>
 (function () {
-    const ROWS_PER_PAGE = 20;
+    const ROWS_PER_PAGE = 25;
     let currentPage = 1;
     let filteredRows = [];
 
     const searchInput   = document.getElementById('filter-search');
     const accountSelect = document.getElementById('filter-account');
-    const typeSelect    = document.getElementById('filter-type');
-    const categorySelect= document.getElementById('filter-category');
+    const dateSelect    = document.getElementById('filter-date');
     const resetBtn      = document.getElementById('filter-reset');
     const tbody         = document.getElementById('tx-tbody');
     const noResults     = document.getElementById('tx-no-results');
@@ -412,15 +349,32 @@
     function applyFilters() {
         const search   = (searchInput?.value || '').toLowerCase().trim();
         const account  = accountSelect?.value || '';
-        const type     = typeSelect?.value || '';
-        const category = categorySelect?.value || '';
+        const dateFilter = dateSelect?.value || '';
+
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
 
         filteredRows = allRows.filter(row => {
-            const matchSearch   = !search   || row.dataset.desc.includes(search) || row.dataset.category.toLowerCase().includes(search);
+            const rowDateStr = row.dataset.date;
+            const rowDate = new Date(rowDateStr);
+
+            const matchSearch   = !search || (row.dataset.desc && row.dataset.desc.includes(search));
             const matchAccount  = !account  || row.dataset.account === account;
-            const matchType     = !type     || row.dataset.type === type;
-            const matchCategory = !category || row.dataset.category === category;
-            return matchSearch && matchAccount && matchType && matchCategory;
+
+            let matchDate = true;
+            if (dateFilter === 'This Month') {
+                matchDate = rowDate.getMonth() === currentMonth && rowDate.getFullYear() === currentYear;
+            } else if (dateFilter === 'Last Month') {
+                let lastMonth = currentMonth - 1;
+                let year = currentYear;
+                if (lastMonth < 0) { lastMonth = 11; year--; }
+                matchDate = rowDate.getMonth() === lastMonth && rowDate.getFullYear() === year;
+            } else if (dateFilter === 'This Year') {
+                matchDate = rowDate.getFullYear() === currentYear;
+            }
+
+            return matchSearch && matchAccount && matchDate;
         });
 
         currentPage = 1;
@@ -447,7 +401,7 @@
 
         filteredRows.slice(start, end).forEach(r => r.style.display = '');
 
-        const showing = `Showing ${start + 1}–${end} of ${total} entries`;
+        const showing = `Showing ${start + 1} to ${end} of ${total} entries`;
         if (visibleCount) visibleCount.textContent = `${total} entries`;
         if (paginationInfo) paginationInfo.textContent = showing;
 
@@ -459,7 +413,7 @@
         const totalPages = Math.ceil(total / ROWS_PER_PAGE);
         if (totalPages <= 1) { paginationCtrl.innerHTML = ''; return; }
 
-        let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goPage(${currentPage - 1})">← Prev</button>`;
+        let html = `<button class="page-btn" ${currentPage === 1 ? 'disabled' : ''} onclick="goPage(${currentPage - 1})">Previous</button>`;
 
         const delta = 2;
         const range = [];
@@ -473,7 +427,7 @@
         if (range[range.length - 1] < totalPages - 1) html += `<span style="color:var(--text-secondary);padding:0 4px;line-height:32px;">…</span>`;
         if (totalPages > 1) html += `<button class="page-btn ${currentPage === totalPages ? 'active' : ''}" onclick="goPage(${totalPages})">${totalPages}</button>`;
 
-        html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goPage(${currentPage + 1})">Next →</button>`;
+        html += `<button class="page-btn" ${currentPage === totalPages ? 'disabled' : ''} onclick="goPage(${currentPage + 1})">Next</button>`;
         paginationCtrl.innerHTML = html;
     }
 
@@ -486,15 +440,13 @@
     window.resetFilters = function() {
         if (searchInput) searchInput.value = '';
         if (accountSelect) accountSelect.value = '';
-        if (typeSelect) typeSelect.value = '';
-        if (categorySelect) categorySelect.value = '';
+        if (dateSelect) dateSelect.value = 'This Month';
         applyFilters();
     };
 
     if (searchInput) searchInput.addEventListener('input', applyFilters);
     if (accountSelect) accountSelect.addEventListener('change', applyFilters);
-    if (typeSelect) typeSelect.addEventListener('change', applyFilters);
-    if (categorySelect) categorySelect.addEventListener('change', applyFilters);
+    if (dateSelect) dateSelect.addEventListener('change', applyFilters);
     if (resetBtn) resetBtn.addEventListener('click', resetFilters);
 
     // Initial render

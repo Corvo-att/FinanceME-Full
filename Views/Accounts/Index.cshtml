@@ -26,7 +26,7 @@
             transition: transform 0.55s cubic-bezier(0.23, 1, 0.32, 1);
             transform-style: preserve-3d;
         }
-        .account-flip-card:hover .account-flip-inner { transform: rotateY(180deg); }
+        .account-flip-card.is-flipped .account-flip-inner { transform: rotateY(180deg); }
         .card-face {
             position: absolute; inset: 0; border-radius: var(--radius-lg);
             backface-visibility: hidden; padding: var(--space-lg);
@@ -105,22 +105,22 @@
 <div class="grid grid-cols-4 accounts-kpi-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:var(--space-md);margin-top:var(--space-lg);">
     <div class="stat-card">
         <div class="stat-card__label">Total Assets</div>
-        <div class="stat-card__value">@totalAssets.ToString("C")</div>
+        <div class="stat-card__value" id="kpi-total-assets">@totalAssets.ToString("C")</div>
         <div class="stat-card__delta stat-card__delta--positive">All positive balances</div>
     </div>
     <div class="stat-card">
         <div class="stat-card__label">Total Liabilities</div>
-        <div class="stat-card__value amount-negative" style="color:var(--negative);">@totalLiabilities.ToString("C")</div>
+        <div class="stat-card__value amount-negative" id="kpi-total-liabilities" style="color:var(--negative);">@totalLiabilities.ToString("C")</div>
         <div class="stat-card__delta stat-card__delta--negative">All negative balances</div>
     </div>
     <div class="stat-card">
         <div class="stat-card__label">Net Position</div>
-        <div class="stat-card__value @(netPosition >= 0 ? "" : "amount-negative")" style="color:@(netPosition >= 0 ? "var(--positive)" : "var(--negative)");">@netPosition.ToString("C")</div>
+        <div class="stat-card__value @(netPosition >= 0 ? "" : "amount-negative")" id="kpi-net-position" style="color:@(netPosition >= 0 ? "var(--positive)" : "var(--negative)");">@netPosition.ToString("C")</div>
         <div class="stat-card__delta @(netPosition >= 0 ? "stat-card__delta--positive" : "stat-card__delta--negative")">@(netPosition >= 0 ? "Healthy" : "In deficit")</div>
     </div>
     <div class="stat-card">
         <div class="stat-card__label">Linked Accounts</div>
-        <div class="stat-card__value">@accountCount</div>
+        <div class="stat-card__value" id="kpi-linked-accounts">@accountCount</div>
         <div class="badge badge-neutral" style="width:fit-content;margin-top:8px;">@accountCount active</div>
     </div>
 </div>
@@ -164,7 +164,7 @@
                     AccountType.Cash       => "fa-money-bill-wave",
                     _                      => "fa-wallet"
                 };
-                <div class="account-flip-card" data-type="@acc.Type.ToString()">
+                <div class="account-flip-card" data-type="@acc.Type.ToString()" data-balance="@acc.Balance">
                     <div class="account-flip-inner">
                         <div class="card-face card-front">
                             <div class="card-front-top">
@@ -173,18 +173,19 @@
                                 </div>
                                 <span class="card-type-badge">@acc.Type</span>
                             </div>
-                            <div>
-                                <div class="card-name">@acc.Name</div>
-                                <div class="card-institution">@(string.IsNullOrEmpty(acc.Institution) ? "Manual Account" : acc.Institution)@(!string.IsNullOrEmpty(acc.AccountNumber) ? $" ····{acc.AccountNumber}" : "")</div>
-                            </div>
-                            <div class="card-balance @(acc.Balance >= 0 ? "positive" : "negative")">
-                                @acc.Balance.ToString("C")
+                            <div style="margin-top: auto;">
+                                <div class="card-name">@(string.IsNullOrEmpty(acc.Institution) ? "Manual Account" : acc.Institution)</div>
+                                <div class="card-institution">@acc.Name@(!string.IsNullOrEmpty(acc.AccountNumber) ? $" ····{acc.AccountNumber}" : "")</div>
+                                <div class="card-tap-hint" style="font-size: 11px; color: var(--text-secondary); opacity: 0.7; margin-top: 8px;">● Tap to see details</div>
                             </div>
                         </div>
                         <div class="card-face card-back">
-                            <div>
-                                <div style="font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--text-secondary);margin-bottom:4px;">Balance</div>
-                                <div class="card-balance @(acc.Balance >= 0 ? "positive" : "negative")" style="font-size:18px;">@acc.Balance.ToString("C")</div>
+                            <div class="card-back-top" style="display: flex; justify-content: space-between; font-size: 10px; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">
+                                <span>@(string.IsNullOrEmpty(acc.Institution) ? "Manual Account" : acc.Institution)</span>
+                                <span>@acc.Type</span>
+                            </div>
+                            <div class="card-balance @(acc.Balance >= 0 ? "positive" : "negative")" style="text-align: center; margin-bottom: 16px;">
+                                @acc.Balance.ToString("C")
                             </div>
                             <div class="card-back-action">
                                 <a asp-action="Details" asp-route-id="@acc.Id" class="btn btn-ghost btn-sm">Details</a>
@@ -381,7 +382,13 @@
     const closeBtn   = document.getElementById('payment-close-btn');
     const cancelBtn  = document.getElementById('payment-cancel-btn');
 
-    function openModal()  { modal.style.display = 'block'; backdrop.style.display = 'block'; document.body.style.overflow = 'hidden'; }
+    function openModal()  { 
+        if (backdrop && backdrop.parentNode !== document.body) document.body.appendChild(backdrop);
+        if (modal && modal.parentNode !== document.body) document.body.appendChild(modal);
+        modal.style.display = 'block'; 
+        backdrop.style.display = 'block'; 
+        document.body.style.overflow = 'hidden'; 
+    }
     function closeModal() { modal.style.display = 'none';  backdrop.style.display = 'none';  document.body.style.overflow = ''; }
 
     if (openBtn)  openBtn.addEventListener('click', openModal);
@@ -440,6 +447,63 @@
     // ── Auto-dismiss toast ──
     const toast = document.getElementById('acc-toast');
     if (toast) setTimeout(() => toast.style.opacity = '0', 4000);
+
+    // ── Toggle Flip and KPI Recalculation ──
+    function formatCurrency(amount) {
+        const isNegative = amount < 0;
+        const absAmount = Math.abs(amount);
+        const formatted = absAmount.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        return (isNegative ? '-E£' : 'E£') + formatted;
+    }
+
+    function updateKPIs() {
+        const allCards = document.querySelectorAll('.account-flip-card');
+        const flippedCards = document.querySelectorAll('.account-flip-card.is-flipped');
+        
+        // If none flipped, calculate total of all
+        const activeCards = flippedCards.length > 0 ? flippedCards : allCards;
+        
+        let totalAssets = 0;
+        let totalLiabilities = 0;
+        let accountCount = activeCards.length;
+        
+        activeCards.forEach(card => {
+            const balance = parseFloat(card.dataset.balance) || 0;
+            if (balance > 0) {
+                totalAssets += balance;
+            } else {
+                totalLiabilities += balance;
+            }
+        });
+        
+        const netPosition = totalAssets + totalLiabilities;
+        
+        const kpiAssets = document.getElementById('kpi-total-assets');
+        if(kpiAssets) kpiAssets.textContent = formatCurrency(totalAssets);
+        
+        const kpiLiab = document.getElementById('kpi-total-liabilities');
+        if(kpiLiab) kpiLiab.textContent = formatCurrency(totalLiabilities);
+        
+        const kpiNet = document.getElementById('kpi-net-position');
+        if(kpiNet) {
+            kpiNet.textContent = formatCurrency(netPosition);
+            kpiNet.style.color = netPosition >= 0 ? 'var(--positive)' : 'var(--negative)';
+            kpiNet.classList.toggle('amount-negative', netPosition < 0);
+        }
+        
+        const kpiLinked = document.getElementById('kpi-linked-accounts');
+        if(kpiLinked) kpiLinked.textContent = accountCount;
+    }
+
+    document.querySelectorAll('.account-flip-card').forEach(card => {
+        card.addEventListener('click', function(e) {
+            // Prevent flipping if clicking an action button on the back
+            if (e.target.closest('a') || e.target.closest('button')) return;
+            
+            this.classList.toggle('is-flipped');
+            updateKPIs();
+        });
+    });
 })();
 </script>
 }

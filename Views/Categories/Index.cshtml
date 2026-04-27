@@ -5,20 +5,59 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/transactions.css" asp-append-version="true" />
-    <script src="https://kit.fontawesome.com/b9a020078f.js" crossorigin="anonymous"></script>
+    <style>
+        /* ── Page Banner ── */
+        .tx-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: var(--space-lg); flex-wrap: wrap; padding: var(--space-xl);
+            margin-bottom: var(--space-md); background: var(--bg-surface);
+            border: 1px solid var(--border-subtle); border-radius: var(--radius-lg);
+        }
+        .tx-page-title { font-size: 28px; font-family: var(--font-ui); font-weight: 700; color: var(--text-primary); margin: 0 0 6px; }
+        .tx-page-subtitle { font-size: 13px; color: var(--text-secondary); margin: 0; line-height: 1.5; }
+        .tx-header-actions { display: flex; gap: var(--space-sm); align-items: center; flex-shrink: 0; }
+        .btn-add-tx { background: var(--accent-gold); color: #000; font-weight: 600; border-radius: 6px; padding: 10px 24px; border: none; display: inline-flex; align-items: center; gap: 8px; text-decoration: none; }
+
+        /* ── Filter Bar ── */
+        .filter-bar {
+            display: flex; gap: var(--space-md); margin-bottom: var(--space-md); background: var(--bg-surface); padding: var(--space-md); border-radius: var(--radius-lg); border: 1px solid var(--border-subtle); flex-wrap: wrap; align-items: flex-end;
+        }
+        .filter-bar .input-group { display: flex; flex-direction: column; gap: var(--space-xs); }
+        .filter-bar .input-group label { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-secondary); font-family: var(--font-ui); font-weight: 600; margin-bottom: 4px; }
+        .filter-bar .input-group input {
+            padding: 0 12px; height: 36px; background: rgba(255,255,255,0.03); border: 1px solid var(--border-subtle); color: var(--text-primary); border-radius: 6px; font-family: var(--font-ui); font-size: 13px; min-width: 250px;
+        }
+        .filter-bar .input-group input:focus { border-color: var(--accent-blue); outline: none; }
+
+        /* ── Data Table ── */
+        .tx-card { background: var(--bg-surface); border: 1px solid var(--border-subtle); border-radius: var(--radius-lg); overflow: hidden; }
+        .tx-table { width: 100%; border-collapse: collapse; }
+        .tx-table th { font-size: 10px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; padding: 16px 24px; border-bottom: 1px solid var(--border-subtle); text-align: left; background: rgba(0,0,0,0.2); }
+        .tx-table td { padding: 16px 24px; border-bottom: 1px solid rgba(255,255,255,0.02); font-size: 14px; vertical-align: middle; color: var(--text-primary); }
+        .tx-table tr.cat-row {
+            background: radial-gradient(ellipse 50% 100% at top left, color-mix(in srgb, var(--cat-color) 16%, transparent), transparent);
+            transition: background 150ms ease;
+        }
+        .tx-table tr.cat-row:hover {
+            background: radial-gradient(ellipse 50% 100% at top left, color-mix(in srgb, var(--cat-color) 24%, transparent), transparent), rgba(255,255,255,0.03);
+        }
+        
+        .tx-row-actions { opacity: 0; transition: opacity 0.2s ease; display: flex; gap: 8px; justify-content: flex-end; }
+        .tx-table tr:hover .tx-row-actions { opacity: 1; }
+        .tx-action-btn { padding: 6px 12px; border-radius: 4px; font-size: 12px; font-weight: 500; text-decoration: none; border: 1px solid transparent; }
+        .tx-action-btn:hover { background: rgba(255,255,255,0.05); }
+        .tx-action-btn.delete:hover { background: rgba(224,92,92,0.1); color: var(--negative); border-color: rgba(224,92,92,0.3); }
+    </style>
 }
 
-<header class="transactions-header page-banner">
-    <div class="page-banner-content">
-        <h1 class="text-display" style="font-size: 28px; font-family: var(--font-ui)">Categories</h1>
-        <p class="transactions-subtitle page-banner-subtitle">
-            Manage how you classify your transactions and budgets. 
-        </p>
+<header class="tx-header">
+    <div>
+        <h1 class="tx-page-title">Categories</h1>
+        <p class="tx-page-subtitle">Manage how you classify your transactions and budgets.</p>
     </div>
-    <div class="transactions-actions page-banner-actions">
-        <a asp-action="Create" class="btn btn-primary" style="display: inline-flex; align-items: center">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0A0A0F" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px">
+    <div class="tx-header-actions">
+        <a asp-action="Create" class="btn-add-tx">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"></line>
                 <line x1="5" y1="12" x2="19" y2="12"></line>
             </svg>
@@ -27,16 +66,15 @@
     </div>
 </header>
 
-<!-- Filter Bar Mock -->
 <div class="filter-bar">
     <div class="input-group">
-        <label for="filter-search">Search</label>
-        <input type="text" id="filter-search" placeholder="Find a category..." />
+        <label for="filter-search">Search Categories</label>
+        <input type="text" id="filter-search" placeholder="Type to filter..." />
     </div>
 </div>
 
-<div class="card">
-    <table class="data-table" style="width: 100%">
+<div class="tx-card">
+    <table class="tx-table" id="categoriesTable">
         <thead>
             <tr>
                 <th>Name</th>
@@ -48,46 +86,36 @@
         <tbody>
             @foreach (var item in Model)
             {
-                <tr>
-                    <td style="font-weight: 500">
-                        @if (!string.IsNullOrEmpty(item.Color))
-                        {
-                            <span class="category-dot" style="background: @item.Color; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px;"></span>
-                        }
-                        else
-                        {
-                            <span class="category-dot" style="background: var(--text-muted); display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px;"></span>
-                        }
+                var catColor = !string.IsNullOrEmpty(item.Color) ? item.Color : "var(--text-muted)";
+                <tr class="cat-row" style="--cat-color: @catColor;">
+                    <td style="font-weight: 500;">
                         @item.Name
                     </td>
-                    <td>@(item.IsDefault ? "System" : "Custom")</td>
-                    <td class="text-secondary">-</td>
-                    <td style="text-align: right">
-                        <a asp-action="Details" asp-route-id="@item.Id" class="btn btn-ghost btn-sm">Details</a> |
-                        <a asp-action="Edit" asp-route-id="@item.Id" class="btn btn-ghost btn-sm">Edit</a> |
-                        <a asp-action="Delete" asp-route-id="@item.Id" class="btn btn-ghost btn-danger btn-sm">Delete</a>
+                    <td style="color: var(--text-secondary);">@(item.IsDefault ? "System" : "Custom")</td>
+                    <td style="color: var(--text-muted);">-</td>
+                    <td>
+                        <div class="tx-row-actions">
+                            <a asp-action="Details" asp-route-id="@item.Id" class="tx-action-btn text-secondary">Details</a>
+                            <a asp-action="Edit" asp-route-id="@item.Id" class="tx-action-btn text-secondary">Edit</a>
+                            <a asp-action="Delete" asp-route-id="@item.Id" class="tx-action-btn delete text-secondary">Delete</a>
+                        </div>
                     </td>
                 </tr>
                 @foreach (var subItem in item.SubCategories)
                 {
-                    <tr>
-                        <td style="padding-left: 30px; font-weight: 400">
-                            @if (!string.IsNullOrEmpty(subItem.Color))
-                            {
-                                <span class="category-dot" style="background: @subItem.Color; display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px;"></span>
-                            }
-                            else
-                            {
-                                <span class="category-dot" style="background: var(--text-muted); display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 8px;"></span>
-                            }
+                    var subColor = !string.IsNullOrEmpty(subItem.Color) ? subItem.Color : "var(--text-muted)";
+                    <tr class="cat-row" style="--cat-color: @subColor;">
+                        <td style="padding-left: 40px; font-weight: 500;">
                             @subItem.Name
                         </td>
-                        <td>@(subItem.IsDefault ? "System" : "Custom")</td>
-                        <td class="text-secondary">@item.Name</td>
-                        <td style="text-align: right">
-                            <a asp-action="Details" asp-route-id="@subItem.Id" class="btn btn-ghost btn-sm">Details</a> |
-                            <a asp-action="Edit" asp-route-id="@subItem.Id" class="btn btn-ghost btn-sm">Edit</a> |
-                            <a asp-action="Delete" asp-route-id="@subItem.Id" class="btn btn-ghost btn-danger btn-sm">Delete</a>
+                        <td style="color: var(--text-secondary);">@(subItem.IsDefault ? "System" : "Custom")</td>
+                        <td style="color: var(--text-secondary);">@item.Name</td>
+                        <td>
+                            <div class="tx-row-actions">
+                                <a asp-action="Details" asp-route-id="@subItem.Id" class="tx-action-btn text-secondary">Details</a>
+                                <a asp-action="Edit" asp-route-id="@subItem.Id" class="tx-action-btn text-secondary">Edit</a>
+                                <a asp-action="Delete" asp-route-id="@subItem.Id" class="tx-action-btn delete text-secondary">Delete</a>
+                            </div>
                         </td>
                     </tr>
                 }
@@ -95,9 +123,22 @@
             @if(!Model.Any())
             {
                 <tr>
-                    <td colspan="4" class="text-center text-muted" style="padding: var(--space-xl) 0;">No categories found. View system defaults or add custom tracking categories.</td>
+                    <td colspan="4" class="text-center text-muted" style="padding: 40px 0;">No categories found. View system defaults or add custom tracking categories.</td>
                 </tr>
             }
         </tbody>
     </table>
 </div>
+
+@section Scripts {
+    <script>
+        document.getElementById('filter-search').addEventListener('input', function(e) {
+            const term = e.target.value.toLowerCase();
+            const rows = document.querySelectorAll('.cat-row');
+            rows.forEach(row => {
+                const text = row.textContent.toLowerCase();
+                row.style.display = text.includes(term) ? '' : 'none';
+            });
+        });
+    </script>
+}

@@ -5,69 +5,91 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/transactions.css" asp-append-version="true" />
-    <script src="https://kit.fontawesome.com/b9a020078f.js" crossorigin="anonymous"></script>
+    <style>
+        .tx-details-card {
+            max-width: 500px; margin: 40px auto;
+            background: var(--bg-surface); border: 1px solid var(--danger);
+            border-radius: var(--radius-lg); padding: 40px;
+        }
+        .tx-d-hero { text-align: center; margin-bottom: 40px; }
+        .tx-d-amount {
+            font-size: 32px; font-weight: 700; font-family: var(--font-ui); margin-bottom: 8px; display: flex; align-items: center; justify-content: center; gap: 12px;
+        }
+        .tx-d-merchant { font-size: 16px; color: var(--text-secondary); margin-bottom: 6px; }
+
+        .tx-d-list { display: flex; flex-direction: column; }
+        .tx-d-row {
+            display: flex; justify-content: space-between; align-items: flex-start;
+            padding: 20px 0; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .tx-d-row:last-child { border-bottom: none; }
+        .tx-d-label { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--text-secondary); font-weight: 600; flex-shrink: 0; width: 140px; }
+        .tx-d-val { font-size: 14px; font-weight: 500; color: var(--text-primary); text-align: right; }
+
+        .tx-d-footer {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 40px; padding-top: 24px; border-top: 1px solid var(--border-subtle);
+        }
+        .btn-cancel {
+            background: transparent; color: var(--text-secondary);
+            padding: 10px 24px; font-weight: 500; font-size: 14px;
+            display: inline-flex; align-items: center; gap: 8px; text-decoration: none;
+            transition: color 0.2s ease;
+        }
+        .btn-cancel:hover { color: var(--text-primary); }
+
+        .btn-delete-solid {
+            background: var(--danger); color: white; border: none;
+            padding: 10px 32px; border-radius: 6px; font-weight: 600; font-size: 14px;
+            display: inline-flex; align-items: center; gap: 8px; cursor: pointer;
+        }
+        .btn-delete-solid:disabled { opacity: 0.5; cursor: not-allowed; }
+    </style>
 }
 
-<div class="form-container">
-    <header class="page-header">
-        <a asp-action="Index" class="btn btn-ghost btn-sm" style="display: inline-flex; align-items: center; margin-bottom: var(--space-md); margin-left: -8px;">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 4px"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-            Back to Categories
-        </a>
-    </header>
+<div class="tx-details-card">
+    <div style="text-align: center; margin-bottom: var(--space-xl);">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-sm);">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <h2 style="font-size: 24px; margin: 0 0 8px; color: var(--danger);">Delete Category?</h2>
+        <p style="color: var(--text-secondary); font-size: 14px; margin: 0;">Are you sure you want to delete this category? It will no longer be available for transactions or budgets.</p>
+    </div>
 
-    <div class="card border-danger" style="padding: var(--space-xl); max-width: 600px; margin: 40px auto; border: 1px solid var(--danger);">
-        <div style="text-align: center; margin-bottom: var(--space-lg);">
-            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--danger)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: var(--space-sm);">
-                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                <line x1="12" y1="9" x2="12" y2="13"></line>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-            </svg>
-            <h2 class="text-display text-danger" style="font-size: 24px; margin-bottom: 8px;">Delete Category?</h2>
-            <p class="text-secondary">Are you sure you want to delete this category? It will no longer be available for transactions or budgets.</p>
-        </div>
-
-        <div asp-validation-summary="ModelOnly" class="text-danger" style="margin-bottom: var(--space-md);"></div>
-
-        <div class="tx-hero" style="text-align: center; margin-bottom: var(--space-xl)">
-            <div class="tx-amount" style="font-size: 32px; font-weight: bold; font-family: var(--font-ui); display: inline-flex; align-items: center;">
-                @if (!string.IsNullOrEmpty(Model?.Color))
-                {
-                    <span style="background: @Model?.Color; width: 24px; height: 24px; border-radius: 50%; display: inline-block; margin-right: 12px;"></span>
-                }
-                @Model?.Name
-            </div>
-        </div>
-
-        <div class="detail-list" style="display: flex; flex-direction: column; gap: var(--space-md);">
-            <div class="detail-row" style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: var(--space-sm);">
-                <span class="detail-label text-secondary">Type</span>
-                <span class="detail-value" style="font-weight: 500;">@(Model?.IsDefault == true ? "System Category" : "Custom Category")</span>
-            </div>
-            @if (Model?.ParentCategory != null)
+    <div class="tx-d-hero" style="background: rgba(0,0,0,0.1); padding: 24px; border-radius: 8px; margin-bottom: 24px;">
+        <div class="tx-d-amount">
+            @if (!string.IsNullOrEmpty(Model?.Color))
             {
-                <div class="detail-row" style="display: flex; justify-content: space-between; border-bottom: 1px solid var(--border); padding-bottom: var(--space-sm);">
-                    <span class="detail-label text-secondary">Parent</span>
-                    <span class="detail-value" style="font-weight: 500;">@Model?.ParentCategory?.Name</span>
-                </div>
+                <span style="background: @Model?.Color; width: 20px; height: 20px; border-radius: 50%; display: inline-block;"></span>
             }
+            @Model?.Name
         </div>
-
-        <div style="margin-top: var(--space-xl);">
-            <form asp-action="Delete" style="display: flex; gap: var(--space-sm);">
-                <input type="hidden" asp-for="Id" />
-                <a asp-action="Index" class="btn btn-ghost" style="flex: 1; justify-content: center; background-color: var(--surface-hover);">Cancel</a>
-                
-                @if (ViewBag.IsInUse == true || Model?.IsDefault == true)
-                {
-                    <button type="submit" class="btn btn-danger" style="flex: 1; justify-content: center; background-color: var(--danger); color: white; opacity: 0.5; pointer-events: none;" disabled>Delete Permanently</button>
-                }
-                else
-                {
-                    <button type="submit" class="btn btn-danger" style="flex: 1; justify-content: center; background-color: var(--danger); color: white;">Delete Permanently</button>
-                }
-            </form>
+        <div class="tx-d-merchant">
+            @(Model?.IsDefault == true ? "System Category" : "Custom Category")
         </div>
     </div>
+
+    <form asp-action="Delete">
+        <input type="hidden" asp-for="Id" />
+        <div class="tx-d-footer">
+            <a asp-action="Index" class="btn-cancel">Cancel</a>
+            
+            @if (ViewBag.IsInUse == true || Model?.IsDefault == true)
+            {
+                <button type="submit" class="btn-delete-solid" disabled>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    Delete Permanently
+                </button>
+            }
+            else
+            {
+                <button type="submit" class="btn-delete-solid">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                    Delete Permanently
+                </button>
+            }
+        </div>
+    </form>
 </div>
