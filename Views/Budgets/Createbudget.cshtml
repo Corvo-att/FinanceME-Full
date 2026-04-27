@@ -1,4 +1,5 @@
-﻿@{
+@model FinanceME.Models.Entities.Budget
+@{
     ViewData["Title"] = "Create Budget Overview";
 }
 
@@ -48,48 +49,44 @@
 
                     </header>
 
-                <form asp-controller="Budgets" asp-action="Savebudget" method="post" class="card"
-                          style="padding: var(--space-xl)"
-                          onsubmit="
-                event.preventDefault();
-                window.location.href = 'budgets.html';
-              ">
-                        <div class="form-group" style="margin-bottom: var(--space-lg)">
-                            <label for="category" class="form-label">Category</label>
-                            <select id="category" class="form-input" required>
-                                <option value="" disabled selected>Select a category</option>
-                                <option value="housing">Housing</option>
-                                <option value="food">Food & Dining</option>
-                                <option value="transportation">Transportation</option>
-                                <option value="utilities">Utilities</option>
-                                <option value="shopping">Shopping</option>
-                                <option value="entertainment">Entertainment</option>
+                <form asp-controller="Budgets" asp-action="Savebudget" method="post" class="card" style="padding: var(--space-xl)">
+                    <input type="hidden" asp-for="Id" />
+
+                        <div class="form-group mb-3">
+                            <label asp-for="CategoryId" class="form-label">Category</label>
+                            <select asp-for="CategoryId" class="form-input" asp-items="ViewBag.CategoryId">
+                            <option value="">-- Select Category --</option>
                             </select>
                         </div>
+                    
 
-                        <div class="form-group" style="margin-bottom: var(--space-lg)">
-                            <label for="amount" class="form-label">Monthly Limit</label>
-                            <div class="amount-input-wrapper">
-                                <span class="currency-symbol">$</span>
-                                <input type="number"
-                                       id="amount"
-                                       class="form-input"
-                                       step="0.01"
-                                       min="0"
-                                       placeholder="0.00"
-                                       required />
-                            </div>
+                    <div class="form-group" style="margin-bottom: var(--space-lg)">
+                        
+                        <label asp-for="LimitAmount" class="form-label">Monthly Limit</label>
+
+                        <div class="amount-input-wrapper">
+                            <span class="currency-symbol">$</span>
+                           
+                         
+                            <input asp-for="LimitAmount"
+                                   class="form-input"
+                                   type="number"
+                                   step="0.01"
+                                   min="0"
+                                   placeholder="0.00"
+                                   required />
                         </div>
+                       
+                        <span asp-validation-for="LimitAmount" class="text-danger"></span>
+                    </div>
 
                         <div class="form-group" style="margin-bottom: var(--space-lg)">
-                            <label for="period" class="form-label">Time Period</label>
-                            <select id="period" class="form-input">
-                                <option value="monthly" selected>
-                                    Monthly (Reset on the 1st)
-                                </option>
-                                <option value="weekly">Weekly</option>
-                                <option value="yearly">Yearly</option>
-                            </select>
+                        <label asp-for="Period" class="form-label">Time Period</label>
+                        <select asp-for="Period" class="form-input">
+                            <option value="Monthly">Monthly (Reset on the 1st)</option>
+                            <option value="Weekly">Weekly</option>
+                            <option value="Yearly">Yearly</option>
+                        </select>
                         </div>
 
                         <div class="form-group">
@@ -137,7 +134,7 @@
                         </div>
 
                         <div class="btn-row">
-                        <a asp-controller="Budgets" asp-action="Index" class="btn btn-ghost" title="Budgets">Cancel</a>
+                            <a asp-controller="Budgets" asp-action="Index" class="btn btn-ghost" title="Budgets">Cancel</a>
                         <button type="submit" class=" btn btn-primary">Save Budget</button>
                         </div>
                     </form>

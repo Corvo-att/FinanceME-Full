@@ -13,12 +13,13 @@ namespace FinanceME.Models.Entities
         [ForeignKey(nameof(UserId))]
         public virtual User User { get; set; } = null!;
 
-        [Required]
+        [Required(ErrorMessage = "Please select a category")]
         public int CategoryId { get; set; }
-        [ForeignKey(nameof(CategoryId))]
-        public virtual Category Category { get; set; } = null!;
 
-        [Required]
+        [ForeignKey(nameof(CategoryId))]
+        public Category? Category { get; set; }
+
+
         [MaxLength(150)]
         public string Name { get; set; } = string.Empty;
 

@@ -1,4 +1,4 @@
-﻿using FinanceME.Data;
+using FinanceME.Data;
 using FinanceME.Enums;
 using FinanceME.Models.Entities;
 using FinanceME.Models.ViewModels;
@@ -6,6 +6,7 @@ using FinanceME.Models.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace FinanceME.Controllers
@@ -24,36 +25,127 @@ namespace FinanceME.Controllers
 
         public IActionResult Index()
         {
-            return View();
+            var details = _context.Budgets
+                       .Include(b => b.Category)
+                       .ToList();
+
+            return View(details);
         }
 
-        public IActionResult Budgetdetail()
+        public IActionResult Budgetdetail(int id)
         {
-            return View();
+            var details = _context.Budgets
+                           .Include(b => b.Category) // So you can show the category name
+                           .FirstOrDefault(x => x.Id == id);
+
+            return View(details);
         }
+
+
+
+        [HttpPost]
+        public IActionResult Savebudget(Budget budget)
+        {
+            
+            // We remove these because we set them manually below, not from the form
+            ModelState.Remove(nameof(budget.UserId));
+            ModelState.Remove(nameof(budget.User));
+            ModelState.Remove(nameof(budget.Category));
+
+
+
+            var userId = _userManager.GetUserId(User)!;
+            budget.UserId = userId;
+
+            var existingBudget = _context.Budgets.FirstOrDefault(b => b.Id == budget.Id && b.UserId == userId);
+
+            if (existingBudget != null)
+            {
+                existingBudget.LimitAmount = budget.LimitAmount;
+                existingBudget.CategoryId = budget.CategoryId;
+                existingBudget.Period = budget.Period;
+                existingBudget.EndDate = budget.EndDate;
+                existingBudget.UpdatedAt = DateTime.UtcNow;
+            }
+            else
+            {
+                budget.CreatedAt = DateTime.UtcNow;
+                budget.StartDate = DateTime.UtcNow;
+                budget.IsActive = true;
+                _context.Budgets.Add(budget);
+            }
+
+            switch (budget.Period)
+            {
+                case BudgetPeriod.Weekly:
+                    budget.EndDate = budget.StartDate.AddDays(7);
+                    break;
+
+                case BudgetPeriod.Yearly:
+                    budget.EndDate = budget.StartDate.AddYears(1);
+                    break;
+
+                case BudgetPeriod.Monthly:
+                default:
+                    
+                    budget.EndDate = budget.StartDate.AddMonths(1);
+                    break;
+            }
+
+
+            _context.SaveChanges();
+
+            return RedirectToAction("Budgetdetail", new { id = budget.Id });
+
+
+        }
+
+        public IActionResult Editbudget(int? id)
+        {
+            var userId = _userManager.GetUserId(User)!;
+            var budget = _context.Budgets.FirstOrDefault(b => b.Id == id && b.UserId == userId);
+
+            SetSelectLists(budget);
+
+
+
+            return View("Createbudget", budget); 
+        }
+
 
         public IActionResult Createbudget()
         {
-            return View();
+            SetSelectLists();
+           return View("Createbudget"); 
         }
 
-        public async Task<IActionResult> Savebudget(Budget budget)
+
+
+        private void SetSelectLists(Budget? budget = null)
         {
-            ModelState.Remove(nameof(budget.UserId));
-            ModelState.Remove(nameof(budget.User));
+            var userId = _userManager.GetUserId(User)!;
 
-            if (!ModelState.IsValid) return View(budget);
+            ViewData["CategoryId"] = new SelectList(
+                _context.Categories.Where(c => c.UserId == userId && c.IsActive),
+                "Id", "Name", budget?.CategoryId);
 
-            budget.UserId = _userManager.GetUserId(User)!;
-            budget.CreatedAt = DateTime.UtcNow;
-            budget.UpdatedAt = DateTime.UtcNow;
-            budget.IsActive = true;
-
-            _context.Budgets.Add(budget);
-            await _context.SaveChangesAsync();
-
-
-            return RedirectToAction(nameof(Index));
         }
+
+       
+
+
+        public IActionResult DeleteBudget(int? id)
+        {
+           var del = _context.Budgets.FirstOrDefault(b => b.Id == id);
+
+            _context.Budgets.Remove(del);
+            _context.SaveChanges();
+
+            return RedirectToAction("Index");
+        }
+
+
+
+
     }
 }
