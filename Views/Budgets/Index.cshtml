@@ -1,4 +1,6 @@
-﻿@{
+﻿@model List<FinanceME.Models.Entities.Budget>
+
+@{
     ViewData["Title"] = "Budgets Overview";
 }
 
@@ -94,31 +96,32 @@
 
                 <div class="budgets-grid">
                     <!-- Safe Budget -->
-                <a asp-controller="Budgets" asp-action="Budgetdetail" class="card budget-card" title="Budgets">
+                @foreach (var item in Model) {
+                    <a asp-controller="Budgets" asp-route-id = "@item.Id" asp-action="Budgetdetail" class="card budget-card" title="Budgets">
                         <div class="budget-header">
                             <div>
                                 <div class="budget-icon"
-                                     style="
+                                style="
                       background: rgba(76, 142, 245, 0.1);
                       color: var(--accent-blue);
-                    ">
+                                ">
                                     <svg width="20"
-                                         height="20"
-                                         viewBox="0 0 24 24"
-                                         fill="none"
-                                         stroke="currentColor"
-                                         stroke-width="2"
-                                         stroke-linecap="round"
-                                         stroke-linejoin="round">
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    stroke-width="2"
+                                    stroke-linecap="round"
+                                    stroke-linejoin="round">
                                         <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                                         <polyline points="9 22 9 12 15 12 15 22"></polyline>
                                     </svg>
                                 </div>
-                                <h3 class="budget-title">Housing</h3>
+                                <h3 class="budget-title">@item.Category.Name</h3>
                             </div>
                             <div class="budget-amount-display">
                                 <span class="budget-amount-spent">EGP 1,800.00</span>
-                                <span class="budget-amount-total">of EGP 1,800.00</span>
+                                <span class="budget-amount-total">OF EGP @item.LimitAmount</span>
                             </div>
                         </div>
                         <div class="progress-container">
@@ -128,12 +131,13 @@
                             </div>
                             <div class="progress-track">
                                 <div class="progress-fill fill-safe"
-                                     style="width: 100%"></div>
+                                style="width: 100%"></div>
                             </div>
                         </div>
                     </a>
+                }
 
-                    <!-- Warning Budget -->
+                <!-- Warning Budget -->
                     
 
                     <!-- Danger Budget -->
