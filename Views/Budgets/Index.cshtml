@@ -1,7 +1,9 @@
-﻿@model List<FinanceME.Models.Entities.Budget>
+@model List<FinanceME.Models.Entities.Budget>
+
 
 @{
     ViewData["Title"] = "Budgets Overview";
+    
 }
 
 @section Styles {
@@ -11,6 +13,7 @@
 
 
 
+<body>
     <div class="app-container">
         <div id="sidebar-container"></div>
         <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -96,6 +99,8 @@
 
                 <div class="budgets-grid">
                     <!-- Safe Budget -->
+                  
+                        
                 @foreach (var item in Model) {
                     <a asp-controller="Budgets" asp-route-id = "@item.Id" asp-action="Budgetdetail" class="card budget-card" title="Budgets">
                         <div class="budget-header">
@@ -119,15 +124,16 @@
                                 </div>
                                 <h3 class="budget-title">@item.Category.Name</h3>
                             </div>
+
                             <div class="budget-amount-display">
-                                <span class="budget-amount-spent">EGP 1,800.00</span>
+                                <span class="budget-amount-spent">EGP idk</span>
                                 <span class="budget-amount-total">OF EGP @item.LimitAmount</span>
                             </div>
+
                         </div>
                         <div class="progress-container">
                             <div class="progress-meta">
                                 <span class="text-safe">100% used</span>
-                                <span>EGP 0 left</span>
                             </div>
                             <div class="progress-track">
                                 <div class="progress-fill fill-safe"
@@ -136,6 +142,7 @@
                         </div>
                     </a>
                 }
+            
 
                 <!-- Warning Budget -->
                     
@@ -151,8 +158,9 @@
             <div id="footer-container"></div>
         </div>
     </div>
-
+</body>
  
+
 
 
   

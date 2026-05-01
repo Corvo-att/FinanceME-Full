@@ -1,3 +1,4 @@
+
 using FinanceME.Data;
 using FinanceME.Enums;
 using FinanceME.Models.Entities;
@@ -25,18 +26,29 @@ namespace FinanceME.Controllers
 
         public IActionResult Index()
         {
+           
+
             var details = _context.Budgets
                        .Include(b => b.Category)
                        .ToList();
+
+            
+                           
+            
 
             return View(details);
         }
 
         public IActionResult Budgetdetail(int id)
         {
+            var userId = _userManager.GetUserId(User)!;
+
             var details = _context.Budgets
-                           .Include(b => b.Category) // So you can show the category name
+                           .Include(b => b.Category) 
                            .FirstOrDefault(x => x.Id == id);
+
+
+            Transactionlist(details);
 
             return View(details);
         }
@@ -46,7 +58,7 @@ namespace FinanceME.Controllers
         [HttpPost]
         public IActionResult Savebudget(Budget budget)
         {
-            
+
             // We remove these because we set them manually below, not from the form
             ModelState.Remove(nameof(budget.UserId));
             ModelState.Remove(nameof(budget.User));
@@ -87,7 +99,7 @@ namespace FinanceME.Controllers
 
                 case BudgetPeriod.Monthly:
                 default:
-                    
+
                     budget.EndDate = budget.StartDate.AddMonths(1);
                     break;
             }
@@ -109,14 +121,14 @@ namespace FinanceME.Controllers
 
 
 
-            return View("Createbudget", budget); 
+            return View("Createbudget", budget);
         }
 
 
         public IActionResult Createbudget()
         {
             SetSelectLists();
-           return View("Createbudget"); 
+            return View("Createbudget");
         }
 
 
@@ -125,18 +137,28 @@ namespace FinanceME.Controllers
         {
             var userId = _userManager.GetUserId(User)!;
 
-            ViewData["CategoryId"] = new SelectList(
+            ViewBag.CategoryId = new SelectList(
                 _context.Categories.Where(c => c.UserId == userId && c.IsActive),
                 "Id", "Name", budget?.CategoryId);
 
         }
 
-       
+
+     
+
+
+        private void Transactionlist(Budget? budget = null)
+        {
+            var userId = _userManager.GetUserId(User)!;
+
+            ViewBag.Transactions = _context.Transactions.Include(t => t.Category).Where(t => t.UserId == userId && t.CategoryId == budget.CategoryId).ToList();
+
+        }
 
 
         public IActionResult DeleteBudget(int? id)
         {
-           var del = _context.Budgets.FirstOrDefault(b => b.Id == id);
+            var del = _context.Budgets.FirstOrDefault(b => b.Id == id);
 
             _context.Budgets.Remove(del);
             _context.SaveChanges();
