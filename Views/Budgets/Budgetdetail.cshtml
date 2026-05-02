@@ -1,7 +1,9 @@
 ﻿@model FinanceME.Models.Entities.Budget
+@using FinanceME.Models.Entities
 
 @{
     ViewData["Title"] = "Budget detail Overview";
+    var transactions = ViewBag.Transactions as List<Transaction>;
 }
 
 @section Styles {
@@ -10,7 +12,7 @@
 }
 
 
-
+<body>
     <div class="app-container">
         <div id="sidebar-container"></div>
         <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -20,7 +22,7 @@
 
             <div class="content-wrapper">
                 <header class="page-header">
-                <a asp-controller="Budgets" asp-action="Index" class="btn btn-ghost btn-sm" title="Budgets"
+                    <a asp-controller="Budgets" asp-action="Index" class="btn btn-ghost btn-sm" title="Budgets"
                        class="btn btn-ghost btn-sm"
                        style="
                 display: inline-flex;
@@ -43,23 +45,23 @@
                     </a>
 
                     <div style="display: flex; gap: var(--space-sm)">
-                    
-                    <div class="actions-group" style="display: flex; gap: var(--space-sm); margin-top: var(--space-md)">
-                        <a asp-controller="Budgets"
-                           asp-action="Editbudget"
-                           asp-route-id="@Model.Id"
-                           class="btn btn-secondary">
-                            Edit Budget
-                        </a>
 
-                        <form asp-controller="Budgets" asp-action="DeleteBudget" asp-route-id="@Model.Id" method="post">
-                            <button type="submit"
-                                    class="btn btn-ghost"
-                                    style="color: var(--negative)">
-                                Delete
-                            </button>
-                        </form>
-                    </div>
+                        <div class="actions-group" style="display: flex; gap: var(--space-sm); margin-top: var(--space-md)">
+                            <a asp-controller="Budgets"
+                               asp-action="Editbudget"
+                               asp-route-id="@Model.Id"
+                               class="btn btn-secondary">
+                                Edit Budget
+                            </a>
+
+                            <form asp-controller="Budgets" asp-action="DeleteBudget" asp-route-id="@Model.Id" method="post">
+                                <button type="submit"
+                                        class="btn btn-ghost"
+                                        style="color: var(--negative)">
+                                    Delete
+                                </button>
+                            </form>
+                        </div>
 
                     </div>
 
@@ -93,25 +95,46 @@
                       font-size: 13px;
                       text-transform: uppercase;
                       letter-spacing: 1px;
-                    ">March 2026</span>
+                    ">@Model.Category.CreatedAt</span>
                             </div>
                         </div>
                     </div>
 
-                    <div class="budget-amount-display">
-                        <span class="hero-spent">EGP @Model.LimitAmount</span>
-                        <span class="hero-total">of EGP 500.00 limits</span>
-                    </div>
+                    @{
+                        decimal sum = 0;
 
-                    <div class="progress-container">
-                        <div class="progress-meta">
-                            <span class="text-warning">84% used</span>
-                            <span>EGP 79.50 left</span>
+
+                        foreach (var item in transactions)
+                        {
+                            sum += item.Amount;
+                        }
+
+                        Model.SpentAmount = Model.LimitAmount - sum;
+
+                        <div class="budget-amount-display">
+
+
+
+
+
+                            <span class="hero-spent">EGP @sum</span>
+
+
+                            <span class="hero-total">OF EGP @Model.LimitAmount limit</span>
                         </div>
-                        <div class="progress-track">
-                            <div class="progress-fill" style="width: 84%"></div>
+
+                        <div class="progress-container">
+                            <div class="progress-meta">
+                                <span class="text-warning">84% used</span>
+                                <span>EGP @Model.SpentAmount left</span>
+                            </div>
+
+                            <div class="progress-track">
+                                <div class="progress-fill" style="width: 84%"></div>
+                            </div>
+
                         </div>
-                    </div>
+                    }
 
                     <div class="insight-box">
                         <svg width="16"
@@ -150,56 +173,28 @@
                                 </tr>
                             </thead>
                             <tbody>
-                                <tr>
-                                    <td>Mar 14, 2026</td>
-                                    <td>
-                                        <span style="color: var(--text-primary); font-weight: 500">Whole Foods Market</span>
-                                    </td>
-                                    <td>Groceries</td>
-                                    <td style="text-align: right; font-family: var(--font-mono)">
-                                        EGP 112.40
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Mar 12, 2026</td>
-                                    <td>
-                                        <span style="color: var(--text-primary); font-weight: 500">Uber Eats</span>
-                                    </td>
-                                    <td>Delivery</td>
-                                    <td style="text-align: right; font-family: var(--font-mono)">
-                                        EGP 45.90
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Mar 10, 2026</td>
-                                    <td>
-                                        <span style="color: var(--text-primary); font-weight: 500">Starbucks</span>
-                                    </td>
-                                    <td>Coffee</td>
-                                    <td style="text-align: right; font-family: var(--font-mono)">
-                                        EGP 6.50
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Mar 05, 2026</td>
-                                    <td>
-                                        <span style="color: var(--text-primary); font-weight: 500">Trader Joe's</span>
-                                    </td>
-                                    <td>Groceries</td>
-                                    <td style="text-align: right; font-family: var(--font-mono)">
-                                        EGP 89.20
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td>Mar 02, 2026</td>
-                                    <td>
-                                        <span style="color: var(--text-primary); font-weight: 500">DoorDash</span>
-                                    </td>
-                                    <td>Delivery</td>
-                                    <td style="text-align: right; font-family: var(--font-mono)">
-                                        EGP 32.10
-                                    </td>
-                                </tr>
+                                @{
+                                    var i = 0;
+
+                                    foreach (var item in transactions)
+                                    {
+                                        var subCategory = item.Category?.SubCategories
+                                        .ElementAtOrDefault(i);
+
+                                        i++;
+
+                                        <tr>
+                                            <td>@item.CreatedAt</td>
+                                            <td>
+                                                <span style="color: var(--text-primary); font-weight: 500">@item.Description</span>
+                                            </td>
+                                            <td>@(subCategory?.Name ?? "No Subcategory")</td>
+                                            <td style="text-align: right; font-family: var(--font-mono)">
+                                                EGP @item.Amount
+                                            </td>
+                                        </tr>
+                                    }
+                                }
                             </tbody>
                         </table>
                     </div>
@@ -209,7 +204,7 @@
                 border-top: 1px solid var(--border-subtle);
                 background: var(--bg-surface);
               ">
-                        <a href="transactions.html" class="btn btn-ghost btn-sm">View All in Food & Dining</a>
+                        <a asp-controller="Transactions" asp-action="Index" class="btn btn-ghost btn-sm">View All in @Model.Category.Name</a>
                     </div>
                 </div>
             </div>
@@ -217,10 +212,11 @@
             <div id="footer-container"></div>
         </div>
     </div>
+</body>
 
 @section Scripts {
     <script>
-        window.ACTIVE_PAGE = "budgets";
+        window.ACTIVE_PAGE = "budgetdetail";
         window.USER_NAME = "@(User.Identity?.Name ?? "User")";
     </script>
     <script src="~/js/utils.js" asp-append-version="true"></script>
