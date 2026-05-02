@@ -1,7 +1,9 @@
 ﻿@model List<FinanceME.Models.Entities.Budget>
 
+
 @{
     ViewData["Title"] = "Budgets Overview";
+
 }
 
 @section Styles {
@@ -11,6 +13,7 @@
 
 
 
+<body>
     <div class="app-container">
         <div id="sidebar-container"></div>
         <div class="sidebar-overlay" id="sidebar-overlay"></div>
@@ -48,7 +51,7 @@
                         </p>
                     </div>
                     <div class="page-banner-actions">
-                    <a asp-controller="Budgets" asp-action="Createbudget" class="btn btn-primary" title="Budgets">Create Budget</a>
+                        <a asp-controller="Budgets" asp-action="Createbudget" class="btn btn-primary" title="Budgets">Create Budget</a>
                     </div>
                 </header>
 
@@ -70,7 +73,7 @@
                         <span class="stat-card__label">Total Spent</span>
                         <span class="stat-card__value" style="color: var(--warning)">EGP 3,150.00</span>
                         <div style="margin-top: 8px">
-                            <span class="stat-card__delta stat-card__delta--negative">75% Used</span>
+                            <span class="stat-card_delta stat-card_delta--negative">75% Used</span>
                         </div>
                     </div>
 
@@ -78,7 +81,7 @@
                         <span class="stat-card__label">Remaining</span>
                         <span class="stat-card__value" style="color: var(--positive)">EGP 1,050.00</span>
                         <div style="margin-top: 8px">
-                            <span class="stat-card__delta stat-card__delta--positive">On Track</span>
+                            <span class="stat-card_delta stat-card_delta--positive">On Track</span>
                         </div>
                     </div>
                 </div>
@@ -96,66 +99,64 @@
 
                 <div class="budgets-grid">
                     <!-- Safe Budget -->
-                @foreach (var item in Model) {
-                    <a asp-controller="Budgets" asp-route-id = "@item.Id" asp-action="Budgetdetail" class="card budget-card" title="Budgets">
-                        <div class="budget-header">
-                            <div>
-                                <div class="budget-icon"
-                                style="
-                      background: rgba(76, 142, 245, 0.1);
-                      color: var(--accent-blue);
-                                ">
-                                    <svg width="20"
-                                    height="20"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    stroke-width="2"
-                                    stroke-linecap="round"
-                                    stroke-linejoin="round">
-                                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                                    </svg>
+                    @foreach (var item in Model)
+                    {
+                        <a asp-controller="Budgets" asp-route-id="@item.Id" asp-action="Budgetdetail" class="card budget-card" title="Budgets">
+                            <div class="budget-header">
+                                <div>
+                                    <div class="budget-icon"
+                                         style="
+                          background: rgba(76, 142, 245, 0.1);
+                          color: var(--accent-blue);
+                                    ">
+                                        <svg width="20"
+                                             height="20"
+                                             viewBox="0 0 24 24"
+                                             fill="none"
+                                             stroke="currentColor"
+                                             stroke-width="2"
+                                             stroke-linecap="round"
+                                             stroke-linejoin="round">
+                                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                        </svg>
+                                    </div>
+                                    <h3 class="budget-title">@item.Category.Name</h3>
                                 </div>
-                                <h3 class="budget-title">@item.Category.Name</h3>
-                            </div>
-                            <div class="budget-amount-display">
-                                <span class="budget-amount-spent">EGP 1,800.00</span>
-                                <span class="budget-amount-total">OF EGP @item.LimitAmount</span>
-                            </div>
-                        </div>
-                        <div class="progress-container">
-                            <div class="progress-meta">
-                                <span class="text-safe">100% used</span>
-                                <span>EGP 0 left</span>
-                            </div>
-                            <div class="progress-track">
-                                <div class="progress-fill fill-safe"
-                                style="width: 100%"></div>
-                            </div>
-                        </div>
-                    </a>
-                }
 
-                <!-- Warning Budget -->
+                                <div class="budget-amount-display">
+                                    <span class="budget-amount-spent">EGP idk</span>
+                                    <span class="budget-amount-total">OF EGP @item.LimitAmount</span>
+                                </div>
+
+                            </div>
+                            <div class="progress-container">
+                                <div class="progress-meta">
+                                    <span class="text-safe">100% used</span>
+                                </div>
+                                <div class="progress-track">
+                                    <div class="progress-fill fill-safe"
+                                         style="width: 100%"></div>
+                                </div>
+                            </div>
+                        </a>
+                    }
+
+
                     
 
-                    <!-- Danger Budget -->
-                    
-
-                    <!-- Good Budget -->
-                    
                 </div>
             </div>
 
             <div id="footer-container"></div>
         </div>
     </div>
+</body>
 
- 
 
 
-  
+
+
 @section Scripts {
     <script>
         window.ACTIVE_PAGE = "budgets";
