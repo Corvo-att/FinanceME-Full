@@ -2,7 +2,6 @@ using FinanceME.Data;
 using FinanceME.Enums;
 using FinanceME.Models.Entities;
 using FinanceME.Models.ViewModels;
-
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
@@ -31,6 +30,15 @@ namespace FinanceME.Controllers
                 .Where(a => a.UserId == userId && a.IsActive)
                 .OrderBy(a => a.Type)
                 .ThenBy(a => a.Name)
+                .ToListAsync();
+
+            // CHANGE: Load recent transactions across all accounts so the view can filter them by flipped card
+            ViewBag.RecentTransactions = await _context.Transactions
+                .Where(t => t.UserId == userId)
+                .OrderByDescending(t => t.Date)
+                .Take(15)
+                .Include(t => t.Account)
+                .Include(t => t.Category)
                 .ToListAsync();
 
             return View(accounts);
@@ -139,22 +147,10 @@ namespace FinanceME.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // GET: Accounts/Delete/5
-        public async Task<IActionResult> Delete(int id)
-        {
-            var userId = _userManager.GetUserId(User)!;
-            var account = await _context.Accounts
-                .FirstOrDefaultAsync(a => a.Id == id && a.UserId == userId);
-
-            if (account == null) return NotFound();
-
-            return View(account);
-        }
-
-        // POST: Accounts/Delete/5 — soft-delete (keep transaction history intact)
-        [HttpPost, ActionName("Delete")]
+        // POST: Accounts/Deactivate/5 — soft-delete (keep transaction history intact)
+        [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> DeleteConfirmed(int id)
+        public async Task<IActionResult> Deactivate(int id)
         {
             var userId = _userManager.GetUserId(User)!;
             var account = await _context.Accounts

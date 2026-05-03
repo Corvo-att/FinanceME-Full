@@ -26,14 +26,32 @@ namespace FinanceME.Controllers
         public IActionResult Index()
         {
 
+            var userId = _userManager.GetUserId(User)!;
 
             var details = _context.Budgets
                        .Include(b => b.Category)
+                       .Where(b => b.UserId == userId)
                        .ToList();
 
+            // Calculate spent amount per budget from actual transactions
+            foreach (var b in details)
+            {
+                b.SpentAmount = _context.Transactions
+                    .Where(t => t.UserId == userId && t.CategoryId == b.CategoryId 
+                             && t.Date >= b.StartDate && t.Date <= b.EndDate)
+                    .Sum(t => (decimal?)t.Amount) ?? 0;
+            }
 
+            // Calculate dynamic totals for KPIs
+            ViewBag.TotalBudget = details.Sum(b => b.LimitAmount);
+            ViewBag.TotalSpent = details.Sum(b => b.SpentAmount);
+            ViewBag.Remaining = ViewBag.TotalBudget - ViewBag.TotalSpent;
 
-
+            // CHANGE: Determine which budgets have triggered the 80% alert
+            ViewBag.AlertBudgetIds = details
+                .Where(b => b.AlertOnThreshold && b.SpentAmount >= b.LimitAmount * (b.WarningThreshold / 100))
+                .Select(b => b.Id)
+                .ToHashSet();
 
             return View(details);
         }
@@ -68,6 +86,13 @@ namespace FinanceME.Controllers
             var userId = _userManager.GetUserId(User)!;
             budget.UserId = userId;
 
+            // FIX: Check validation after removing fields that are handled manually
+            if (!ModelState.IsValid)
+            {
+                SetSelectLists(budget);
+                return View("Createbudget", budget);
+            }
+
             var existingBudget = _context.Budgets.FirstOrDefault(b => b.Id == budget.Id && b.UserId == userId);
 
             if (existingBudget != null)
@@ -76,6 +101,9 @@ namespace FinanceME.Controllers
                 existingBudget.CategoryId = budget.CategoryId;
                 existingBudget.Period = budget.Period;
                 existingBudget.EndDate = budget.EndDate;
+                // CHANGE: Persist the rollover and alert preferences
+                existingBudget.RolloverUnused = budget.RolloverUnused;
+                existingBudget.AlertOnThreshold = budget.AlertOnThreshold;
                 existingBudget.UpdatedAt = DateTime.UtcNow;
             }
             else

@@ -43,6 +43,12 @@ namespace FinanceME.Models.Entities
 
         public bool IsActive { get; set; } = true;
 
+        // CHANGE: Carry unused budget forward to the next period when true
+        public bool RolloverUnused { get; set; } = false;
+
+        // CHANGE: Show in-app alert when spending reaches WarningThreshold %
+        public bool AlertOnThreshold { get; set; } = true;
+
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
     }

@@ -10,16 +10,6 @@
     <script src="https://kit.fontawesome.com/b9a020078f.js" crossorigin="anonymous"></script>
 }
 
-
-<body>
-    <div class="app-container">
-        <div id="sidebar-container"></div>
-        <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
-        <div class="main-content">
-            <div id="header-container"></div>
-
-            <div class="content-wrapper">
                 <div class="form-container">
                     <header class="page-header">
 
@@ -99,6 +89,7 @@
                     gap: var(--space-sm);
                     margin-top: var(--space-xs);
                   ">
+                                <!-- CHANGE: Bound to Budget.RolloverUnused so value is saved -->
                                 <label style="
                       display: flex;
                       align-items: center;
@@ -107,7 +98,8 @@
                       cursor: pointer;
                       font-size: 14px;
                     ">
-                                    <input type="checkbox"
+                                    <input asp-for="RolloverUnused"
+                                           type="checkbox"
                                            style="
                         accent-color: var(--accent-gold);
                         width: 16px;
@@ -115,6 +107,7 @@
                       " />
                                     Rollover unused funds to the next month
                                 </label>
+                                <!-- CHANGE: Bound to Budget.AlertOnThreshold so value is saved -->
                                 <label style="
                       display: flex;
                       align-items: center;
@@ -123,8 +116,8 @@
                       cursor: pointer;
                       font-size: 14px;
                     ">
-                                    <input type="checkbox"
-                                           checked
+                                    <input asp-for="AlertOnThreshold"
+                                           type="checkbox"
                                            style="
                         accent-color: var(--accent-gold);
                         width: 16px;
@@ -141,14 +134,6 @@
                         </div>
                     </form>
                 </div>
-            </div>
-
-            <div id="footer-container"></div>
-        </div>
-    </div>
-</body>
-
-
 @section Scripts {
     <script>
         window.ACTIVE_PAGE = "createbudget";

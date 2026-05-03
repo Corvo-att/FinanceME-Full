@@ -75,14 +75,12 @@
 
 .budget-card {
   padding: var(--space-lg);
-  display: flex;
-  flex-direction: column;
+  display: block; /* makes the whole card clickable properly as an anchor */
+  text-decoration: none;
+  color: inherit;
   transition:
     transform var(--transition-fast),
     border-color var(--transition-fast);
-  text-decoration: none;
-  color: inherit;
-  display: block; /* makes the whole card clickable properly as an anchor */
 }
 
 .budget-card:hover {
@@ -90,11 +88,12 @@
   border-color: var(--border-strong);
 }
 
+/* CHANGE: Horizontal layout — icon left, amounts right */
 .budget-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: var(--space-md);
+  align-items: center;
+  margin-bottom: var(--space-xs);
 }
 
 .budget-icon {
@@ -106,6 +105,7 @@
   border-radius: 8px;
   background: var(--bg-elevated);
   color: var(--text-primary);
+  flex-shrink: 0;
 }
 
 .budget-amount-display {
@@ -126,12 +126,14 @@
   color: var(--text-secondary);
 }
 
+/* CHANGE: Title sits below the icon+amount row */
 .budget-title {
   font-family: var(--font-ui);
   font-size: 16px;
   font-weight: 500;
   color: var(--text-primary);
-  margin-top: var(--space-sm);
+  margin-top: var(--space-xs);
+  margin-bottom: var(--space-xs);
 }
 
 /* Semantic Progress Colors */

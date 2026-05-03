@@ -1,4 +1,4 @@
-﻿@model FinanceME.Models.Entities.Budget
+@model FinanceME.Models.Entities.Budget
 @using FinanceME.Models.Entities
 
 @{
@@ -11,16 +11,6 @@
     <script src="https://kit.fontawesome.com/b9a020078f.js" crossorigin="anonymous"></script>
 }
 
-
-<body>
-    <div class="app-container">
-        <div id="sidebar-container"></div>
-        <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
-        <div class="main-content">
-            <div id="header-container"></div>
-
-            <div class="content-wrapper">
                 <header class="page-header">
                     <a asp-controller="Budgets" asp-action="Index" class="btn btn-ghost btn-sm" title="Budgets"
                        class="btn btn-ghost btn-sm"
@@ -71,20 +61,20 @@
                     <div class="hero-top">
                         <div class="hero-title-group">
                             <div class="budget-icon">
-                                <svg width="24"
-                                     height="24"
-                                     viewBox="0 0 24 24"
-                                     fill="none"
-                                     stroke="currentColor"
-                                     stroke-width="2"
-                                     stroke-linecap="round"
-                                     stroke-linejoin="round">
-                                    <path d="M18 8h1a4 4 0 0 1 0 8h-1"></path>
-                                    <path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path>
-                                    <line x1="6" y1="1" x2="6" y2="4"></line>
-                                    <line x1="10" y1="1" x2="10" y2="4"></line>
-                                    <line x1="14" y1="1" x2="14" y2="4"></line>
-                                </svg>
+                                @* CHANGE: Use category emoji icon if available, SVG fallback otherwise *@
+                                @if (!string.IsNullOrEmpty(Model.Category?.Icon))
+                                {
+                                    <span style="font-size: 24px">@Model.Category.Icon</span>
+                                }
+                                else
+                                {
+                                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none"
+                                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                        <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
+                                        <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
+                                        <path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path>
+                                    </svg>
+                                }
                             </div>
                             <div>
                                 <h1 class="text-display" style="font-size: 24px">
@@ -93,9 +83,8 @@
                                 <span style="
                       color: var(--text-secondary);
                       font-size: 13px;
-                      text-transform: uppercase;
                       letter-spacing: 1px;
-                    ">@Model.Category.CreatedAt</span>
+                    ">@Model.CreatedAt.ToString("MMM yyyy")</span>
                             </div>
                         </div>
                     </div>
@@ -103,57 +92,58 @@
                     @{
                         decimal sum = 0;
 
-
                         foreach (var item in transactions)
                         {
                             sum += item.Amount;
                         }
 
-                        Model.SpentAmount = Model.LimitAmount - sum;
+                        // FIX: SpentAmount = total of matching transactions, Remaining = limit - spent
+                        decimal spent = sum;
+                        decimal remaining = Model.LimitAmount - spent;
+                        decimal pct = Model.LimitAmount > 0 ? Math.Round((spent / Model.LimitAmount) * 100, 0) : 0;
+                        string statusClass = pct < 60 ? "text-safe" : pct < 85 ? "text-warning" : "text-danger";
+                        string fillClass = pct < 60 ? "fill-safe" : pct < 85 ? "fill-warning" : "fill-danger";
 
                         <div class="budget-amount-display">
-
-
-
-
-
-                            <span class="hero-spent">EGP @sum</span>
-
-
-                            <span class="hero-total">OF EGP @Model.LimitAmount limit</span>
+                            <span class="hero-spent">EGP @spent.ToString("N2")</span>
+                            <span class="hero-total">OF EGP @Model.LimitAmount.ToString("N2") limit</span>
                         </div>
 
                         <div class="progress-container">
                             <div class="progress-meta">
-                                <span class="text-warning">84% used</span>
-                                <span>EGP @Model.SpentAmount left</span>
+                                <span class="@statusClass">@pct% used</span>
+                                <span>EGP @remaining.ToString("N2") left</span>
                             </div>
 
                             <div class="progress-track">
-                                <div class="progress-fill" style="width: 84%"></div>
+                                <div class="progress-fill @fillClass" style="width: @pct%"></div>
                             </div>
-
                         </div>
                     }
 
-                    <div class="insight-box">
-                        <svg width="16"
-                             height="16"
-                             viewBox="0 0 24 24"
-                             fill="none"
-                             stroke="var(--warning)"
-                             stroke-width="2"
-                             stroke-linecap="round"
-                             stroke-linejoin="round">
-                            <circle cx="12" cy="12" r="10"></circle>
-                            <line x1="12" y1="8" x2="12" y2="12"></line>
-                            <line x1="12" y1="16" x2="12.01" y2="16"></line>
-                        </svg>
-                        <span class="insight-text">
-                            You've spent more rapidly than usual. At this rate, you will
-                            exceed your budget in <strong>4 days.</strong>
-                        </span>
-                    </div>
+                    @* CHANGE: Only show warning insight-box when alert is enabled AND threshold breached *@
+                    @if (Model.AlertOnThreshold && pct >= (decimal)Model.WarningThreshold)
+                    {
+                        <div class="insight-box">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                                 stroke="var(--warning)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                            <span class="insight-text">
+                                ⚠️ You've reached <strong>@pct%</strong> of your <strong>EGP @Model.LimitAmount.ToString("N2")</strong> budget.
+                                @if (remaining > 0)
+                                {
+                                    <text>Only <strong>EGP @remaining.ToString("N2")</strong> remaining.</text>
+                                }
+                                else
+                                {
+                                    <text>You are <strong>EGP @(Math.Abs(remaining).ToString("N2"))</strong> over budget!</text>
+                                }
+                            </span>
+                        </div>
+                    }
                 </div>
 
                 <h2 class="text-display"
@@ -207,12 +197,6 @@
                         <a asp-controller="Transactions" asp-action="Index" class="btn btn-ghost btn-sm">View All in @Model.Category.Name</a>
                     </div>
                 </div>
-            </div>
-
-            <div id="footer-container"></div>
-        </div>
-    </div>
-</body>
 
 @section Scripts {
     <script>

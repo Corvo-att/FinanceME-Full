@@ -1,4 +1,4 @@
-﻿@model List<FinanceME.Models.Entities.Budget>
+@model List<FinanceME.Models.Entities.Budget>
 
 
 @{
@@ -12,16 +12,6 @@
 }
 
 
-
-<body>
-    <div class="app-container">
-        <div id="sidebar-container"></div>
-        <div class="sidebar-overlay" id="sidebar-overlay"></div>
-
-        <div class="main-content">
-            <div id="header-container"></div>
-
-            <div class="content-wrapper">
                 <button class="btn btn-ghost btn-icon"
                         id="mobile-menu-btn"
                         aria-label="Open menu"
@@ -59,27 +49,32 @@
                 <div class="metrics-grid">
                     <div class="card stat-card">
                         <span class="stat-card__label">Total Budget</span>
-                        <span class="stat-card__value">EGP 4,200.00</span>
+                        <span class="stat-card__value">EGP @(ViewBag.TotalBudget?.ToString("N2") ?? "0.00")</span>
                         <div style="margin-top: 8px">
                             <span class="stat-card__delta"
                                   style="
                     background: var(--bg-elevated);
                     color: var(--text-secondary);
-                  ">March 2026</span>
+                  ">@DateTime.Now.ToString("MMMM yyyy")</span>
                         </div>
                     </div>
 
                     <div class="card stat-card">
                         <span class="stat-card__label">Total Spent</span>
-                        <span class="stat-card__value" style="color: var(--warning)">EGP 3,150.00</span>
+                        <span class="stat-card__value" style="color: var(--warning)">EGP @(ViewBag.TotalSpent?.ToString("N2") ?? "0.00")</span>
                         <div style="margin-top: 8px">
-                            <span class="stat-card_delta stat-card_delta--negative">75% Used</span>
+                            @{
+                                decimal totalBudget = ViewBag.TotalBudget ?? 0m;
+                                decimal totalSpent = ViewBag.TotalSpent ?? 0m;
+                                decimal overallPct = totalBudget > 0 ? Math.Round((totalSpent / totalBudget) * 100, 0) : 0;
+                            }
+                            <span class="stat-card_delta @(overallPct < 85 ? "stat-card_delta--positive" : "stat-card_delta--negative")">@overallPct% Used</span>
                         </div>
                     </div>
 
                     <div class="card stat-card">
                         <span class="stat-card__label">Remaining</span>
-                        <span class="stat-card__value" style="color: var(--positive)">EGP 1,050.00</span>
+                        <span class="stat-card__value" style="color: var(--positive)">EGP @(ViewBag.Remaining?.ToString("N2") ?? "0.00")</span>
                         <div style="margin-top: 8px">
                             <span class="stat-card_delta stat-card_delta--positive">On Track</span>
                         </div>
@@ -98,45 +93,59 @@
                 </h2>
 
                 <div class="budgets-grid">
-                    <!-- Safe Budget -->
+                    <!-- CHANGE: Budget cards redesigned to match reference screenshot -->
                     @foreach (var item in Model)
                     {
-                        <a asp-controller="Budgets" asp-route-id="@item.Id" asp-action="Budgetdetail" class="card budget-card" title="Budgets">
+                        // Compute per-card percentage and remaining server-side
+                        var cardPct = item.LimitAmount > 0 ? Math.Round((item.SpentAmount / item.LimitAmount) * 100, 0) : 0;
+                        var cardRemaining = item.LimitAmount - item.SpentAmount;
+                        var cardColorClass = cardPct < 60 ? "text-safe" : cardPct < 85 ? "text-warning" : "text-danger";
+
+                        <a asp-controller="Budgets" asp-route-id="@item.Id" asp-action="Budgetdetail"
+                           class="card budget-card" title="@item.Category?.Name"
+                           data-spent="@item.SpentAmount" data-limit="@item.LimitAmount">
                             <div class="budget-header">
-                                <div>
-                                    <div class="budget-icon"
-                                         style="
-                          background: rgba(76, 142, 245, 0.1);
-                          color: var(--accent-blue);
-                                    ">
-                                        <svg width="20"
-                                             height="20"
-                                             viewBox="0 0 24 24"
-                                             fill="none"
-                                             stroke="currentColor"
-                                             stroke-width="2"
-                                             stroke-linecap="round"
-                                             stroke-linejoin="round">
-                                            <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                <div class="budget-icon"
+                                     style="background: rgba(76, 142, 245, 0.1); color: var(--accent-blue);">
+                                    @* CHANGE: Use category emoji icon if available, SVG fallback otherwise *@
+                                    @if (!string.IsNullOrEmpty(item.Category?.Icon))
+                                    {
+                                        <span style="font-size: 20px">@item.Category.Icon</span>
+                                    }
+                                    else
+                                    {
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none"
+                                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                            <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4"></path>
+                                            <path d="M3 5v14a2 2 0 0 0 2 2h16v-5"></path>
+                                            <path d="M18 12a2 2 0 0 0 0 4h4v-4z"></path>
                                         </svg>
-                                    </div>
-                                    <h3 class="budget-title">@item.Category.Name</h3>
+                                    }
                                 </div>
 
                                 <div class="budget-amount-display">
-                                    <span class="budget-amount-spent">EGP idk</span>
-                                    <span class="budget-amount-total">OF EGP @item.LimitAmount</span>
+                                    <span class="budget-amount-spent">EGP @item.SpentAmount.ToString("N2")</span>
+                                    <span class="budget-amount-total">of EGP @item.LimitAmount.ToString("N2")</span>
                                 </div>
-
                             </div>
+
+                            <h3 class="budget-title">@item.Category?.Name</h3>
+
                             <div class="progress-container">
                                 <div class="progress-meta">
-                                    <span class="text-safe">100% used</span>
+                                    <!-- CHANGE: Per-card percentage and remaining/over-budget -->
+                                    <span class="@cardColorClass">@cardPct% used</span>
+                                    @if (cardRemaining >= 0)
+                                    {
+                                        <span>EGP @cardRemaining.ToString("N2") left</span>
+                                    }
+                                    else
+                                    {
+                                        <span class="text-danger">-EGP @(Math.Abs(cardRemaining).ToString("N2")) over</span>
+                                    }
                                 </div>
                                 <div class="progress-track">
-                                    <div class="progress-fill fill-safe"
-                                         style="width: 100%"></div>
+                                    <div class="progress-fill" style="width: 0%"></div>
                                 </div>
                             </div>
                         </a>
@@ -146,16 +155,6 @@
                     
 
                 </div>
-            </div>
-
-            <div id="footer-container"></div>
-        </div>
-    </div>
-</body>
-
-
-
-
 
 @section Scripts {
     <script>

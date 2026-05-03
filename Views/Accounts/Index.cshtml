@@ -164,7 +164,8 @@
                     AccountType.Cash       => "fa-money-bill-wave",
                     _                      => "fa-wallet"
                 };
-                <div class="account-flip-card" data-type="@acc.Type.ToString()" data-balance="@acc.Balance">
+                <!-- CHANGE: added data-account-id so the JS transaction filter knows which account this card represents -->
+                <div class="account-flip-card" data-type="@acc.Type.ToString()" data-balance="@acc.Balance" data-account-id="@acc.Id">
                     <div class="account-flip-inner">
                         <div class="card-face card-front">
                             <div class="card-front-top">
@@ -210,43 +211,56 @@
 </div>
 
 @* ══════════ LOWER GRID: Recent Activity + Quick Actions ══════════ *@
+@{
+    // CHANGE: Cast the ViewBag transactions for use in the view
+    var recentTx = ViewBag.RecentTransactions as List<FinanceME.Models.Entities.Transaction>;
+    recentTx ??= new List<FinanceME.Models.Entities.Transaction>();
+}
 <div class="accounts-lower-grid">
-    @* Recent Activity *@
+    @* Recent Activity — now shows real transactions filterable by flipped card *@
     <div id="Recent-activity" class="stat-card">
         <div class="recent-activity-header-row">
             <div>
-                <header id="recent-activity-header" class="text-section">Recent Account Activity</header>
-                <p class="text-label" style="font-size:12px;color:var(--text-secondary);margin-top:4px;">Latest balance-impacting transactions across all accounts.</p>
+                <header id="recent-activity-header" class="text-section">Recent Transactions</header>
+                <p class="text-label" style="font-size:12px;color:var(--text-secondary);margin-top:4px;">
+                    Flip a card above to filter by account. Showing latest @recentTx.Count transactions.
+                </p>
             </div>
-            <a asp-controller="Transactions" asp-action="Index" class="btn btn-ghost recent-activity-link">View all transactions</a>
+            <a asp-controller="Transactions" asp-action="Index" class="btn btn-ghost recent-activity-link">View all</a>
         </div>
         <table class="recent-activity-table">
             <thead>
                 <tr>
+                    <th class="text-label">Date</th>
+                    <th class="text-label">Description</th>
                     <th class="text-label">Account</th>
-                    <th class="text-label">Type</th>
-                    <th class="text-label">Balance</th>
-                    <th class="text-label ra-col-right">Status</th>
+                    <th class="text-label ra-col-right">Amount</th>
                 </tr>
             </thead>
             <tbody id="recent-activity-tbody">
-                @foreach (var acc in Model.Take(6))
-                {
-                    <tr class="recent-activity-details">
-                        <td class="ra-col institution-text">@acc.Name</td>
-                        <td class="ra-col institution-text">@acc.Type</td>
-                        <td class="ra-col institution-text" style="font-family:var(--font-mono);color:@(acc.Balance >= 0 ? "var(--positive)" : "var(--negative)");">@acc.Balance.ToString("C")</td>
-                        <td class="ra-col ra-col-right">
-                            <span class="badge @(acc.Balance >= 0 ? "badge-success" : "badge-danger")" style="font-size:11px;padding:2px 8px;border-radius:10px;background:@(acc.Balance >= 0 ? "rgba(46,204,138,0.12)" : "rgba(224,92,92,0.12)");color:@(acc.Balance >= 0 ? "var(--positive)" : "var(--negative)");">
-                                @(acc.Balance >= 0 ? "Healthy" : "Overdrawn")
-                            </span>
-                        </td>
-                    </tr>
-                }
-                @if (!Model.Any())
+                @if (!recentTx.Any())
                 {
                     <tr>
-                        <td colspan="4" style="text-align:center;padding:32px 0;color:var(--text-secondary);font-size:13px;">No accounts to display yet.</td>
+                        <td colspan="4" style="text-align:center;padding:32px 0;color:var(--text-secondary);font-size:13px;">No transactions yet.</td>
+                    </tr>
+                }
+                @foreach (var tx in recentTx)
+                {
+                    // CHANGE: data-account-id links each row to its flip card for JS filtering
+                    var isIncome = tx.Type == FinanceME.Enums.TransactionType.Income;
+                    <tr class="recent-activity-details" data-account-id="@tx.AccountId">
+                        <td class="ra-col institution-text" style="color:var(--text-secondary);font-size:12px;">@tx.Date.ToString("MMM dd")</td>
+                        <td class="ra-col">
+                            <span style="color:var(--text-primary);font-weight:500;">@tx.Description</span>
+                            @if (tx.Category != null)
+                            {
+                                <br /><span style="font-size:11px;color:var(--text-secondary);">@tx.Category.Name</span>
+                            }
+                        </td>
+                        <td class="ra-col institution-text" style="font-size:12px;">@tx.Account?.Name</td>
+                        <td class="ra-col ra-col-right" style="font-family:var(--font-mono);color:@(isIncome ? "var(--positive)" : "var(--negative)");">
+                            @(isIncome ? "+" : "-")EGP @tx.Amount.ToString("N2")
+                        </td>
                     </tr>
                 }
             </tbody>
@@ -495,6 +509,21 @@
         if(kpiLinked) kpiLinked.textContent = accountCount;
     }
 
+    // CHANGE: Filter the transaction table rows by flipped card account IDs
+    function updateTransactionTable() {
+        const flipped = document.querySelectorAll('.account-flip-card.is-flipped');
+        const rows = document.querySelectorAll('#recent-activity-tbody tr[data-account-id]');
+        if (flipped.length === 0) {
+            // Nothing flipped — show all
+            rows.forEach(r => r.style.display = '');
+        } else {
+            const filterIds = new Set([...flipped].map(c => c.dataset.accountId));
+            rows.forEach(r => {
+                r.style.display = filterIds.has(r.dataset.accountId) ? '' : 'none';
+            });
+        }
+    }
+
     document.querySelectorAll('.account-flip-card').forEach(card => {
         card.addEventListener('click', function(e) {
             // Prevent flipping if clicking an action button on the back
@@ -502,6 +531,7 @@
             
             this.classList.toggle('is-flipped');
             updateKPIs();
+            updateTransactionTable(); // CHANGE: also filter transactions on flip
         });
     });
 })();
